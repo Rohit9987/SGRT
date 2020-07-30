@@ -10,6 +10,10 @@
 #include <QGridLayout>
 #include <QPushButton>
 #include <QMenuBar>
+#include <QRadioButton>
+#include <QPushButton>
+#include <QSpacerItem>
+#include <QComboBox>
 
 #include "opencv2/opencv.hpp"
 
@@ -31,6 +35,11 @@ private:
 
 	QStatusBar *mainStatusBar;
 	QLabel *mainStatusLabel;
+	
+	//members of options layout
+	QPushButton *cameraButton;
+	QPushButton *detectButton;
+	QComboBox *modeComboBox;
 
 	/*
 	 *All layout designs
