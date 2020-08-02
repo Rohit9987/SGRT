@@ -66,7 +66,8 @@ void MainWindow::createAction()
 	openCameraAction = new QAction("Open &Camera", this);
 	fileMenu->addAction(openCameraAction);
 	connect(openCameraAction, &QAction::triggered, this, &MainWindow::openCamera);
-	
+	connect(cameraButton, &QPushButton::clicked, this, &MainWindow::openCamera);
+
 	exitAction = new QAction("&Exit", this);
 	fileMenu->addAction(exitAction);
 	//connect(exitAction, &QAction::triggered, QApplication::instance(), &QCoreApplication::quit);
@@ -91,5 +92,31 @@ void MainWindow::showCameraInfo()
 void MainWindow::openCamera()
 {
 	qDebug() <<"OpenCamera method";
+	camera = new Camera();	//TODO destroy these objects
+	cameraThread = new QThread;
 
+	connect(camera, &Camera::send_videoSignal, this, &MainWindow::display_Video);
+	connect(cameraThread, &QThread::started, camera, &Camera::read_camera);
+	
+	camera->moveToThread(cameraThread);
+	cameraThread->start();
+}
+
+void MainWindow::display_Video(cv::Mat *frame)
+{
+	qDebug() << "Hello from display_Video";
+
+	cv::Mat displayFrame = *frame;
+	QImage image(displayFrame.data,
+			displayFrame.cols,
+			displayFrame.rows,
+			displayFrame.step,
+			QImage::Format_RGB888);
+	QPixmap pixmap = QPixmap::fromImage(image);
+
+	imageScene->clear();
+	imageView->resetMatrix();
+	imageScene->addPixmap(pixmap);
+	imageScene->update();
+	imageView->setSceneRect(pixmap.rect());
 }

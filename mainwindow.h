@@ -17,9 +17,11 @@
 #include <QCameraInfo>
 #include <QList>
 #include <QApplication>
+#include <QThread>
 
 
 #include "opencv2/opencv.hpp"
+#include "camera.h"
 
 class MainWindow: public QMainWindow
 {
@@ -45,6 +47,10 @@ private:
 	QPushButton *detectButton;
 	QComboBox *modeComboBox;
 
+	//Camera Object and QThread for multitasking
+	Camera *camera;
+	QThread *cameraThread;
+
 	/*
 	 *All layout designs
 	 */
@@ -64,7 +70,9 @@ private:
 private slots:
 	void showCameraInfo();
 	void openCamera();
-//	void displayVideo(cv::Mat *frame);
+
+public slots:
+	void display_Video(cv::Mat *frame);
 
 };
 #endif	//MAINWINDOW
