@@ -14,6 +14,10 @@
 #include <QPushButton>
 #include <QSpacerItem>
 #include <QComboBox>
+#include <QCameraInfo>
+#include <QList>
+#include <QApplication>
+
 
 #include "opencv2/opencv.hpp"
 
@@ -49,7 +53,7 @@ private:
 	/*
 	 *
 	 */
-	
+
 	void createAction();
 
 	//TODO
@@ -58,8 +62,8 @@ private:
 	//
 
 private slots:
-//	void showCameraInfo();
-//	void openCamera();
+	void showCameraInfo();
+	void openCamera();
 //	void displayVideo(cv::Mat *frame);
 
 };

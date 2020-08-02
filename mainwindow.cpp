@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 {
@@ -58,8 +59,37 @@ void MainWindow::initUI()
 void MainWindow::createAction()
 {
 	fileMenu = menuBar()->addMenu("&File");
+	cameraInfoAction = new QAction("Camera &Information", this);
+	connect(cameraInfoAction, &QAction::triggered, this, &MainWindow::showCameraInfo);
+	fileMenu->addAction(cameraInfoAction);
+
+	openCameraAction = new QAction("Open &Camera", this);
+	fileMenu->addAction(openCameraAction);
+	connect(openCameraAction, &QAction::triggered, this, &MainWindow::openCamera);
+	
+	exitAction = new QAction("&Exit", this);
+	fileMenu->addAction(exitAction);
+	//connect(exitAction, &QAction::triggered, QApplication::instance(), &QCoreApplication::quit);
+	connect(exitAction, &QAction::triggered, QApplication::instance(), &QCoreApplication::quit);
 
 
+}
 
+
+void MainWindow::showCameraInfo()
+{
+	QList<QCameraInfo> cameras = QCameraInfo::availableCameras();
+	QString cameraInfo = QString("Available camera: \n");
+
+	foreach(const QCameraInfo& camera, cameras)
+	{
+		cameraInfo += "-" + camera.deviceName() + ":" + camera.description() + "\n";
+	}
+	QMessageBox::information(this, "Available Camera", cameraInfo);
+}
+
+void MainWindow::openCamera()
+{
+	qDebug() <<"OpenCamera method";
 
 }
