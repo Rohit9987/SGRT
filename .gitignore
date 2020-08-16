@@ -2,3 +2,6 @@
 Makefile
 .mainwindow.cpp.swp
 .qmake.stash
+moc_camera.cpp
+moc_predefs.h
+SGRT

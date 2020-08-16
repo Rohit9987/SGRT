@@ -9,6 +9,8 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 
 MainWindow::~MainWindow()
 {
+       	disconnect(camera, &Camera::send_videoSignal, this, &MainWindow::display_Video);
+	cameraThread->exit();
 
 }
 
@@ -91,7 +93,7 @@ void MainWindow::showCameraInfo()
 
 void MainWindow::openCamera()
 {
-	qDebug() <<"OpenCamera method";
+//	qDebug() <<"OpenCamera method";
 	camera = new Camera();	//TODO destroy these objects
 	cameraThread = new QThread;
 
@@ -104,7 +106,7 @@ void MainWindow::openCamera()
 
 void MainWindow::display_Video(cv::Mat *frame)
 {
-	qDebug() << "Hello from display_Video";
+	//qDebug() << "Hello from display_Video";
 
 	cv::Mat displayFrame = *frame;
 	QImage image(displayFrame.data,

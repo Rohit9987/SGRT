@@ -25,10 +25,10 @@ private:
 	bool running;
 	int camera;
 	cv::CascadeClassifier *haarClassifier;
-	cv::CascadeClassifier *lbpClassfier;
+	cv::CascadeClassifier *lbpClassifier;
 	cv::Ptr<cv::face::Facemark> mark_detector;
 
-	//void detectFaces();
+	void detectFaces(cv::Mat& frame);
 	//void poseEstimation(cv::Mat &frame, vector<cv::Point2f> &shapes);
 
 };
