@@ -33,5 +33,7 @@ private:
 	void detectFaces(cv::Mat& frame);
     void poseEstimation(cv::Mat &frame, vector<cv::Point2f> &shapes);
 
+    //object detection
+    void objectDetection(cv::Mat& frame);
 };
 #endif

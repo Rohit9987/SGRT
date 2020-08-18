@@ -105,7 +105,7 @@ void MainWindow::openCamera()
 
 void MainWindow::display_Video(cv::Mat *frame)
 {
-	//qDebug() << "Hello from display_Video";
+//    qDebug() << "Hello from display_Video";
     data_lock->lock();
 	cv::Mat displayFrame = *frame;
     data_lock->unlock();
@@ -114,6 +114,7 @@ void MainWindow::display_Video(cv::Mat *frame)
 			displayFrame.rows,
 			displayFrame.step,
 			QImage::Format_RGB888);
+
 	QPixmap pixmap = QPixmap::fromImage(image);
 
 	imageScene->clear();

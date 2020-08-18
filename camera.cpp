@@ -27,14 +27,17 @@ void Camera::read_camera()
 		if(frame.empty())
 			running = false;
 
-		cvtColor(frame, frame, cv::COLOR_BGR2RGB);
-        detectFaces(frame);
+//		cvtColor(frame, frame, cv::COLOR_BGR2RGB);
+//        detectFaces(frame);
+
+	    objectDetection(frame);
         data_lock->lock();
-        frame_send = frame;
+            frame_send = frame;
         data_lock->unlock();
-		emit send_videoSignal(&frame);
-	}
-	cap.release();
+		emit send_videoSignal(&frame_send);
+    }
+
+    cap.release();
 	running = false;
 }
 
@@ -110,4 +113,29 @@ void Camera::poseEstimation(cv::Mat& frame, vector<cv::Point2f>& shapes)
     for(size_t i = 0; i<image_points.size(); i++)
         cv::circle(frame, image_points[i], 3, cv::Scalar( 0, 0, 255), -1);
     cv::line(frame, image_points[0], nose_end_point2D[0], cv::Scalar(255, 0, 0), 2);
+}
+
+void Camera::objectDetection(cv::Mat& frame)
+{
+    cv::Mat hsvImage, threshImage;
+    //these number have to be input from the mainwindow options
+    int lowH = 50;
+    int highH = 255;
+
+    int lowS = 50;
+    int highS = 255;
+    
+    int lowV = 50;
+    int highV = 225;
+
+    cv::cvtColor(frame, hsvImage, cv::COLOR_BGR2HSV);
+    cv::inRange(hsvImage, cv::Scalar(lowH, lowS, lowV),
+            cv::Scalar(highH, highS, highV), threshImage);
+    
+    //blur, dilate and erode
+    cv::GaussianBlur(threshImage, threshImage, cv::Size(3, 3), 0);
+    cv::dilate(threshImage, threshImage, 0);
+    cv::erode(threshImage, threshImage, 0);
+    cv::cvtColor(threshImage, threshImage, cv::COLOR_GRAY2RGB);
+    frame = threshImage;
 }
