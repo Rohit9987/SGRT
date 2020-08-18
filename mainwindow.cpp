@@ -5,6 +5,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 {
 	initUI();
 	createAction();
+    data_lock = new QMutex();
 }
 
 MainWindow::~MainWindow()
@@ -74,8 +75,6 @@ void MainWindow::createAction()
 	fileMenu->addAction(exitAction);
 	//connect(exitAction, &QAction::triggered, QApplication::instance(), &QCoreApplication::quit);
 	connect(exitAction, &QAction::triggered, QApplication::instance(), &QCoreApplication::quit);
-
-
 }
 
 
@@ -94,7 +93,7 @@ void MainWindow::showCameraInfo()
 void MainWindow::openCamera()
 {
 //	qDebug() <<"OpenCamera method";
-	camera = new Camera();	//TODO destroy these objects
+	camera = new Camera(data_lock);	//TODO destroy these objects
 	cameraThread = new QThread;
 
 	connect(camera, &Camera::send_videoSignal, this, &MainWindow::display_Video);
@@ -107,8 +106,9 @@ void MainWindow::openCamera()
 void MainWindow::display_Video(cv::Mat *frame)
 {
 	//qDebug() << "Hello from display_Video";
-
+    data_lock->lock();
 	cv::Mat displayFrame = *frame;
+    data_lock->unlock();
 	QImage image(displayFrame.data,
 			displayFrame.cols,
 			displayFrame.rows,

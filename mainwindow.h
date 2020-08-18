@@ -18,7 +18,7 @@
 #include <QList>
 #include <QApplication>
 #include <QThread>
-
+#include <QMutex>
 
 #include "opencv2/opencv.hpp"
 #include "camera.h"
@@ -50,7 +50,7 @@ private:
 	//Camera Object and QThread for multitasking
 	Camera *camera;
 	QThread *cameraThread;
-
+    QMutex *data_lock;
 	/*
 	 *All layout designs
 	 */

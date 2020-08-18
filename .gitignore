@@ -6,3 +6,4 @@ moc_camera.cpp
 moc_predefs.h
 SGRT
 moc_mainwindow.cpp
+/data/lbfmodel.yaml
