@@ -6,11 +6,13 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 	initUI();
 	createAction();
     data_lock = new QMutex();
+    dibhWindow = nullptr;
+
 }
 
 MainWindow::~MainWindow()
 {
-       	disconnect(camera, &Camera::send_videoSignal, this, &MainWindow::display_Video);
+    disconnect(camera, &Camera::send_videoSignal, this, &MainWindow::display_Video);
 	cameraThread->exit();
 
 }
@@ -95,21 +97,31 @@ void MainWindow::showCameraInfo()
 
 void MainWindow::showdibhWindow()
 {
-    dibhWindow = new dibhControls(this);
-    dibhWindow->setModal(true);
-    dibhWindow->exec();
+    if(dibhWindow == nullptr)
+    {    
+        dibhWindow = new dibhControls(this);
+        connect(dibhWindow, &dibhControls::hsvChanged, this, &MainWindow::hsvChanged);
+    }
+    dibhWindow->show();
 }
 
-
+void MainWindow::hsvChanged(int lowH, int lowS, int lowV,
+            int highH, int highS, int highV)
+{
+    if(lowH < highH || lowS < highS || lowV < highV)
+        camera->hsvChanged(lowH, lowS, lowV, highH, highS, highV);
+}
 void MainWindow::openCamera()
 {
 //	qDebug() <<"OpenCamera method";
 	camera = new Camera(data_lock);	//TODO destroy these objects
 	cameraThread = new QThread;
+    showdibhWindow();
 
 	connect(camera, &Camera::send_videoSignal, this, &MainWindow::display_Video);
 	connect(cameraThread, &QThread::started, camera, &Camera::read_camera);
-	
+    connect(cameraThread, &QThread::finished, cameraThread, &QThread::deleteLater);     
+
 	camera->moveToThread(cameraThread);
 	cameraThread->start();
 }

@@ -18,7 +18,14 @@ private:
     QSlider *lowH, *lowS, *lowV, *highH, *highS, *highV;
     QLabel *lowHueLabel, *lowSaturationLabel, *lowValueLabel,
            *highHueLabel, *highSaturationLabel, *highValueLabel;
+    int lowHValue, lowSValue, lowVValue, highHValue, highSValue, highVValue;
 
+private slots:
+    void hsv_changed();
+
+signals:
+    void hsvChanged(int lowH, int lowS, int lowV,
+            int highH, int highS, int highV);
 };
 
 

@@ -19,8 +19,12 @@ public:
 
 	void read_camera();
 	
+    void hsvChanged(int lowHValue, int lowSValue, int lowVValue,
+            int highHValue, int highSValue, int highVValue);
 signals:
 	void send_videoSignal(cv::Mat *);
+
+//public slots:
 
 private:
 	bool running;
@@ -34,6 +38,7 @@ private:
     void poseEstimation(cv::Mat &frame, vector<cv::Point2f> &shapes);
 
     //object detection
+    int lowH, lowS, lowV, highH, highS, highV;
     void objectDetection(cv::Mat& frame);
 };
 #endif

@@ -11,6 +11,9 @@ Camera::Camera(QMutex *lock): data_lock(lock)
     mark_detector = cv::face::createFacemarkLBF();
     QString model_data = QApplication::instance()->applicationDirPath() +"/data/lbfmodel.yaml";
     mark_detector->loadModel(model_data.toStdString());
+
+    lowH = 50; lowS = 40; lowV = 70;
+    highH = 255; highS = 255; highV = 255;
 }
 
 void Camera::read_camera()
@@ -119,14 +122,6 @@ void Camera::objectDetection(cv::Mat& frame)
 {
     cv::Mat hsvImage, threshImage;
     //these number have to be input from the mainwindow options
-    int lowH = 50;
-    int highH = 255;
-
-    int lowS = 50;
-    int highS = 255;
-    
-    int lowV = 50;
-    int highV = 225;
 
     cv::cvtColor(frame, hsvImage, cv::COLOR_BGR2HSV);
     cv::inRange(hsvImage, cv::Scalar(lowH, lowS, lowV),
@@ -138,4 +133,14 @@ void Camera::objectDetection(cv::Mat& frame)
     cv::erode(threshImage, threshImage, 0);
     cv::cvtColor(threshImage, threshImage, cv::COLOR_GRAY2RGB);
     frame = threshImage;
+}
+
+void Camera::hsvChanged(int lowHValue, int lowSValue, int lowVValue, int highHValue, int highSValue, int highVValue)
+{
+    lowH = lowHValue;
+    lowS = lowSValue;
+    lowV = lowVValue;
+    highH = highHValue;
+    highS = highSValue;
+    highV = highVValue;
 }

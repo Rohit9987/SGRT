@@ -71,6 +71,7 @@ private slots:
     void showdibhWindow();
 public slots:
 	void display_Video(cv::Mat *frame);
-
+    void hsvChanged(int lowH, int lowS, int lowV,
+            int highH, int highS, int highV);
 };
 #endif	//MAINWINDOW
