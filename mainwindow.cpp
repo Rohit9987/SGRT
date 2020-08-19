@@ -59,6 +59,7 @@ void MainWindow::initUI()
 	setCentralWidget(widget);
 }
 
+
 void MainWindow::createAction()
 {
 	fileMenu = menuBar()->addMenu("&File");
@@ -75,6 +76,8 @@ void MainWindow::createAction()
 	fileMenu->addAction(exitAction);
 	//connect(exitAction, &QAction::triggered, QApplication::instance(), &QCoreApplication::quit);
 	connect(exitAction, &QAction::triggered, QApplication::instance(), &QCoreApplication::quit);
+
+    connect(detectButton, &QPushButton::clicked, this, &MainWindow::showdibhWindow); 
 }
 
 
@@ -89,6 +92,14 @@ void MainWindow::showCameraInfo()
 	}
 	QMessageBox::information(this, "Available Camera", cameraInfo);
 }
+
+void MainWindow::showdibhWindow()
+{
+    dibhWindow = new dibhControls(this);
+    dibhWindow->setModal(true);
+    dibhWindow->exec();
+}
+
 
 void MainWindow::openCamera()
 {

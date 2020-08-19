@@ -19,10 +19,11 @@
 #include <QApplication>
 #include <QThread>
 #include <QMutex>
+#include <QSlider>
 
 #include "opencv2/opencv.hpp"
 #include "camera.h"
-
+#include "dibhControls.h"
 class MainWindow: public QMainWindow
 {
 	Q_OBJECT
@@ -47,30 +48,27 @@ private:
 	QPushButton *detectButton;
 	QComboBox *modeComboBox;
 
+    dibhControls *dibhWindow;
+
 	//Camera Object and QThread for multitasking
 	Camera *camera;
 	QThread *cameraThread;
     QMutex *data_lock;
-	/*
+
+	/**
 	 *All layout designs
 	 */
 	void initUI();
-	
-	/*
+	 
+	/**
 	 *
 	 */
-
 	void createAction();
-
-	//TODO
-	//radiobuttons to select mode
-	//start button to open camera - QPushButton
-	//
 
 private slots:
 	void showCameraInfo();
 	void openCamera();
-
+    void showdibhWindow();
 public slots:
 	void display_Video(cv::Mat *frame);
 
