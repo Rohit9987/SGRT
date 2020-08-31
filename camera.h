@@ -8,7 +8,9 @@
 #include "opencv2/opencv.hpp"
 #include "opencv2/objdetect.hpp"
 #include "opencv2/face.hpp"
-
+#include "opencv2/imgcodecs.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
 using namespace std;
 
 class Camera : public QObject
@@ -40,5 +42,6 @@ private:
     //object detection
     int lowH, lowS, lowV, highH, highS, highV;
     void objectDetection(cv::Mat& frame);
+    void drawContours(cv::Mat& frame);
 };
 #endif
