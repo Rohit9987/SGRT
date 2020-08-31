@@ -14,6 +14,11 @@ Camera::Camera(QMutex *lock): data_lock(lock)
 
     lowH = 50; lowS = 40; lowV = 70;
     highH = 255; highS = 255; highV = 255;
+
+//    mFile = nullptr;
+//    mStream = nullptr;
+    filename = nullptr; 
+    n = 0;
 }
 
 void Camera::read_camera()
@@ -165,4 +170,47 @@ void Camera::drawContours(cv::Mat& frame)
         cv::Scalar color = cv::Scalar(120, 0, 0);
         cv::drawContours(frame, contours, (int) i, color, 2, cv::LINE_8, heirarchy, 0);
     }
+
+    //TODO modify
+    if(n < 100)
+    {
+        for(size_t i =0; i < contours.size();i++)
+        {
+            for(size_t j = 0; j <contours[i].size(); j++)
+            {
+                writeFile(contours[i][j]);
+
+            }
+        }
+    }
+    else
+    {
+        mFile.close();
+        delete filename;
+        filename = nullptr;
+    }
+}
+
+    //TODO modify this code to detect contours
+    //Let RTT select an area to detect the motion initially(simulation)
+    //The same area can be retraced 
+void Camera::writeFile(cv::Point point)
+{
+    if(!filename)
+        filename = new QString("/home/rohit/Desktop/SGRT/Surface guidance/outputfile");
+        
+    if(!mFile.isOpen())
+    {
+        mFile.setFileName(*filename);
+        if(!mFile.open(QFile::WriteOnly | QFile::Text))
+        {
+            qDebug() << "Could not open the file";
+            return;
+        }
+    }
+    
+    QTextStream mStream(&mFile);
+    mStream << QString::number(point.x) <<" " << QString::number(point.y) <<"\n";
+    mFile.flush();
+    n++;
 }
