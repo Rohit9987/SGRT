@@ -26,7 +26,7 @@ void MainWindow::initUI()
 	QGridLayout *main_layout = new QGridLayout(widget);
 	
 	imageScene = new QGraphicsScene(widget);
-	imageView = new QGraphicsView(imageScene);
+	imageView = new GraphicsView(imageScene);
 	main_layout->addWidget(imageView, 0, 0, 12, 3);
 
 	//____OPTIONS____LAYOUT____
@@ -101,6 +101,7 @@ void MainWindow::showdibhWindow()
     {    
         dibhWindow = new dibhControls(this);
         connect(dibhWindow, &dibhControls::hsvChanged, this, &MainWindow::hsvChanged);
+        connect(dibhWindow, &dibhControls::sendSelectRegion, this, &MainWindow::receiveSelectRegion);
     }
     dibhWindow->show();
 }
@@ -145,4 +146,11 @@ void MainWindow::display_Video(cv::Mat *frame)
 	imageScene->addPixmap(pixmap);
 	imageScene->update();
 	imageView->setSceneRect(pixmap.rect());
+}
+
+void MainWindow::receiveSelectRegion()
+{
+    qDebug() << "Hello World";
+    area_capture = true;
+    
 }

@@ -136,7 +136,6 @@ void Camera::objectDetection(cv::Mat& frame)
     cv::GaussianBlur(threshImage, threshImage, cv::Size(3, 3), 0);
     cv::dilate(threshImage, threshImage, 0);
     cv::erode(threshImage, threshImage, 0);
-    qDebug() << "line 134";
     drawContours(threshImage);
     cv::cvtColor(threshImage, threshImage, cv::COLOR_GRAY2RGB);
     frame = threshImage;
@@ -154,17 +153,12 @@ void Camera::hsvChanged(int lowHValue, int lowSValue, int lowVValue, int highHVa
 
 void Camera::drawContours(cv::Mat& frame)
 {
-    //Mat canny_output;
-    //Canny(...);
-    qDebug() << "line 154";
     vector<vector<cv::Point>> contours;
     vector<cv::Vec4i> heirarchy;
 
     cv::findContours(frame, contours, heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
-    qDebug() << "line 159";
     //cv::Mat drawing = cv::Mat::zeros( frame.size(), CV_8UC3);
 
-    qDebug() << "line 162";
     for(size_t i=0; i < contours.size(); i++)
     {
         cv::Scalar color = cv::Scalar(120, 0, 0);

@@ -8,3 +8,5 @@ SGRT
 moc_mainwindow.cpp
 /data/lbfmodel.yaml
 moc_dibhControls.cpp
+moc_graphicsview.cpp
+outputfile

@@ -24,6 +24,8 @@
 #include "opencv2/opencv.hpp"
 #include "camera.h"
 #include "dibhControls.h"
+#include "graphicsview.h"
+
 class MainWindow: public QMainWindow
 {
 	Q_OBJECT
@@ -38,7 +40,8 @@ private:
 	QAction * exitAction;
 
 	QGraphicsScene *imageScene;
-	QGraphicsView *imageView;
+	//QGraphicsView *imageView;
+    GraphicsView *imageView;
 
 	QStatusBar *mainStatusBar;
 	QLabel *mainStatusLabel;
@@ -65,6 +68,10 @@ private:
 	 */
 	void createAction();
 
+    //Grab the video area to select HSV Region
+    bool area_capture;
+    
+
 private slots:
 	void showCameraInfo();
 	void openCamera();
@@ -73,5 +80,6 @@ public slots:
 	void display_Video(cv::Mat *frame);
     void hsvChanged(int lowH, int lowS, int lowV,
             int highH, int highS, int highV);
+    void receiveSelectRegion();
 };
 #endif	//MAINWINDOW
