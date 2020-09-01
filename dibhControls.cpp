@@ -79,5 +79,14 @@ void dibhControls::hsv_changed()
 
 void dibhControls::selectRegion()
 {
+    if(selectHSVRegion->text() == "Select Region")
+        selectHSVRegion->setText("Cancel");
+    else
+        selectHSVRegion->setText("Select Region");
     emit sendSelectRegion();
+}
+
+void dibhControls::areaSet()
+{
+    selectHSVRegion->setText("Select Region");
 }

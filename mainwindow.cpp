@@ -7,14 +7,12 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 	createAction();
     data_lock = new QMutex();
     dibhWindow = nullptr;
-
 }
 
 MainWindow::~MainWindow()
 {
     disconnect(camera, &Camera::send_videoSignal, this, &MainWindow::display_Video);
 	cameraThread->exit();
-
 }
 
 void MainWindow::initUI()
@@ -101,7 +99,8 @@ void MainWindow::showdibhWindow()
     {    
         dibhWindow = new dibhControls(this);
         connect(dibhWindow, &dibhControls::hsvChanged, this, &MainWindow::hsvChanged);
-        connect(dibhWindow, &dibhControls::sendSelectRegion, this, &MainWindow::receiveSelectRegion);
+        connect(dibhWindow, &dibhControls::sendSelectRegion, imageView, &GraphicsView::setAreaCapture);
+        connect(imageView, &GraphicsView::areaSetSignal, dibhWindow, &dibhControls::areaSet);
     }
     dibhWindow->show();
 }
@@ -150,7 +149,6 @@ void MainWindow::display_Video(cv::Mat *frame)
 
 void MainWindow::receiveSelectRegion()
 {
-    qDebug() << "Hello World";
-    area_capture = true;
-    
+//  qDebug() << "Hello World";
+    //area_capture = true;
 }

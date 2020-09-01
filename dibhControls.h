@@ -26,6 +26,10 @@ private:
 private slots:
     void hsv_changed();
     void selectRegion();
+
+public slots:
+    void areaSet();
+
 signals:
     void hsvChanged(int lowH, int lowS, int lowV,
             int highH, int highS, int highV);

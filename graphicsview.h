@@ -26,8 +26,14 @@ private slots:
     //void closeMe;
     //void confirmCapture;
 
+public slots:
+    void setAreaCapture();    
+
+signals:
+    void areaSetSignal();
+ 
 private:
     QPoint p1, p2;
-    bool mouseDown;
+    bool mouseDown, area_capture;
 };
 #endif  //GRAPHICSVIEW_H 

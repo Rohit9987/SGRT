@@ -68,9 +68,6 @@ private:
 	 */
 	void createAction();
 
-    //Grab the video area to select HSV Region
-    bool area_capture;
-    
 
 private slots:
 	void showCameraInfo();

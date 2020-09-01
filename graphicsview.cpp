@@ -12,35 +12,51 @@ GraphicsView::~GraphicsView()
 void GraphicsView::enterEvent(QEvent *event)
 {
     QGraphicsView::enterEvent(event);
-    viewport()->setCursor(Qt::CrossCursor);
-
+    if(area_capture)
+        viewport()->setCursor(Qt::CrossCursor);
+    else
+        viewport()->setCursor(Qt::ArrowCursor);
 }
 void GraphicsView::paintEvent(QPaintEvent *event)
 {
     QGraphicsView::paintEvent(event);
 }
 
-
+void GraphicsView::setAreaCapture()
+{
+    area_capture = !area_capture;
+}
 void GraphicsView::mouseMoveEvent(QMouseEvent *event)
 {
     QGraphicsView::mouseMoveEvent(event);
-    qDebug() << QString::number(event->pos().x()) 
-            << " "
-            << QString::number(event->pos().y());
+    if(area_capture)
+    {
+
+    }
 }
 
 void GraphicsView::mousePressEvent(QMouseEvent *event)
 {
     QGraphicsView::mousePressEvent(event);
-    qDebug() << QString::number(event->pos().x()) 
+    if(area_capture)
+    {
+        p1 = event->pos();
+        qDebug() << QString::number(event->pos().x()) 
             << " "
             << QString::number(event->pos().y());
+    }
 }
 
 void GraphicsView::mouseReleaseEvent(QMouseEvent *event)
 {
     QGraphicsView::mouseReleaseEvent(event);
-    qDebug() << QString::number(event->pos().x()) 
+    if(area_capture)
+    {
+        p2 = event->pos();
+        area_capture = false;
+        emit areaSetSignal(); 
+        qDebug() << QString::number(event->pos().x()) 
             << " "
             << QString::number(event->pos().y());
+    }
 }
