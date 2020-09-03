@@ -29,7 +29,8 @@ public:
 signals:
 	void send_videoSignal(cv::Mat *);
 
-//public slots:
+public slots:
+    void receiveAreaPoints(QPointF p1, QPointF p2);
 
 private:
 	bool running;

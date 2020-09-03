@@ -121,6 +121,7 @@ void MainWindow::openCamera()
 	connect(camera, &Camera::send_videoSignal, this, &MainWindow::display_Video);
 	connect(cameraThread, &QThread::started, camera, &Camera::read_camera);
     connect(cameraThread, &QThread::finished, cameraThread, &QThread::deleteLater);     
+    connect(imageView, &GraphicsView::sendAreapoints, camera, &Camera::receiveAreaPoints);
 
 	camera->moveToThread(cameraThread);
 	cameraThread->start();

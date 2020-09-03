@@ -17,7 +17,6 @@ public:
 
 protected:
     void enterEvent(QEvent *event) override;
-    void paintEvent(QPaintEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
@@ -31,7 +30,7 @@ public slots:
 
 signals:
     void areaSetSignal();
- 
+    void sendAreapoints(QPointF p1, QPointF p2); 
 private:
     QPoint p1, p2;
     bool mouseDown, area_capture;

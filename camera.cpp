@@ -208,3 +208,9 @@ void Camera::writeFile(cv::Point point)
     mFile.flush();
     n++;
 }
+
+void Camera::receiveAreaPoints(QPointF p1, QPointF p2)
+{
+    qDebug() << p1.x() <<", " << p1.y()
+        <<"; " << p2.x() << ", " <<p2.y();
+}
