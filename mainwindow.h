@@ -73,6 +73,7 @@ private slots:
 	void showCameraInfo();
 	void openCamera();
     void showdibhWindow();
+    void mouseReleased();
 public slots:
 	void display_Video(cv::Mat *frame);
     void hsvChanged(int lowH, int lowS, int lowV,

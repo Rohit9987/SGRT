@@ -33,6 +33,7 @@ void GraphicsView::mouseMoveEvent(QMouseEvent *event)
             QPointF p3, p4;
             p3 = mapToScene(p1);
             p4 = mapToScene(p2);
+            //TODO check if p2 or p1 exceeds scene width to avoid crash
             emit sendAreapoints(p3, p4);
         }
     }

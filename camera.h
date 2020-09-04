@@ -28,7 +28,8 @@ public:
             int highHValue, int highSValue, int highVValue);
 
     void receiveAreaPoints(QPointF p1, QPointF p2);
-
+    
+    void mouseReleased();
 signals:
 	void send_videoSignal(cv::Mat *);
 
@@ -58,6 +59,7 @@ private:
     
     //draw cv::Rect
     cv::Point point1, point2;
-    bool draw_area_rect;
+    bool draw_area_rect, mouse_released;
+    cv::Rect roi;
 };
 #endif

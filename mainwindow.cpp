@@ -78,6 +78,7 @@ void MainWindow::createAction()
 	connect(exitAction, &QAction::triggered, QApplication::instance(), &QCoreApplication::quit);
 
     connect(detectButton, &QPushButton::clicked, this, &MainWindow::showdibhWindow); 
+    connect(imageView, &GraphicsView::areaSetSignal, this, &MainWindow::mouseReleased);
 }
 
 
@@ -151,4 +152,10 @@ void MainWindow::display_Video(cv::Mat *frame)
 void MainWindow::receiveAreaPoints(QPointF p1, QPointF p2)
 {
     camera->receiveAreaPoints(p1, p2);
+}
+
+void MainWindow::mouseReleased()
+{
+    if(camera != nullptr)
+        camera->mouseReleased();
 }

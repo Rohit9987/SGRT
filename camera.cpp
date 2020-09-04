@@ -19,6 +19,7 @@ Camera::Camera(QMutex *lock): data_lock(lock)
     n = 0;
 
     draw_area_rect = false;
+    mouse_released = false;
 }
 
 void Camera::read_camera()
@@ -41,8 +42,13 @@ void Camera::read_camera()
         {
             cv::Rect hsv_area= cv::Rect(point1, point2);
             cv::rectangle(frame, hsv_area, cv::Scalar(0, 150, 20));
+            //TODO put an if clause to crop only when the mouse is released. 
+            if(mouse_released)
+            {
+                frame = frame(hsv_area);
+                //mouse_released = false;
+            }
         }
-
 	    objectDetection(frame);
         data_lock->lock();
             frame_send = frame;
@@ -222,4 +228,9 @@ void Camera::receiveAreaPoints(QPointF p1, QPointF p2)
     point2.x = p2.x();
     point2.y = p2.y();
     draw_area_rect = true;
+}
+
+void Camera::mouseReleased()
+{
+    mouse_released = true;
 }
