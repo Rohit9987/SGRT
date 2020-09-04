@@ -15,10 +15,10 @@ Camera::Camera(QMutex *lock): data_lock(lock)
     lowH = 50; lowS = 40; lowV = 70;
     highH = 255; highS = 255; highV = 255;
 
-//    mFile = nullptr;
-//    mStream = nullptr;
     filename = nullptr; 
     n = 0;
+
+    draw_area_rect = false;
 }
 
 void Camera::read_camera()
@@ -37,6 +37,11 @@ void Camera::read_camera()
 
 //		cvtColor(frame, frame, cv::COLOR_BGR2RGB);
 //        detectFaces(frame);
+        if(draw_area_rect)
+        {
+            cv::Rect hsv_area= cv::Rect(point1, point2);
+            cv::rectangle(frame, hsv_area, cv::Scalar(0, 150, 20));
+        }
 
 	    objectDetection(frame);
         data_lock->lock();
@@ -151,6 +156,7 @@ void Camera::hsvChanged(int lowHValue, int lowSValue, int lowVValue, int highHVa
     highV = highVValue;
 }
 
+// TODO Need to insert a cv::Rect
 void Camera::drawContours(cv::Mat& frame)
 {
     vector<vector<cv::Point>> contours;
@@ -211,6 +217,9 @@ void Camera::writeFile(cv::Point point)
 
 void Camera::receiveAreaPoints(QPointF p1, QPointF p2)
 {
-    qDebug() << p1.x() <<", " << p1.y()
-        <<"; " << p2.x() << ", " <<p2.y();
+    point1.x = p1.x();
+    point1.y = p1.y();
+    point2.x = p2.x();
+    point2.y = p2.y();
+    draw_area_rect = true;
 }

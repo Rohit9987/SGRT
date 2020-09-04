@@ -28,18 +28,13 @@ void GraphicsView::mouseMoveEvent(QMouseEvent *event)
     if(area_capture)
     {
         p2 = event->pos();
-        qDebug() << p1.x() <<", " << p1.y() << "; "
-            <<p2.x() <<", " << p2.y(); 
-        QPointF p3, p4;
-        qDebug() << p1.x() <<", " << p1.y() << "; "
-            <<p2.x() <<", " << p2.y(); 
-
-        p3 = mapToScene(p1);
-        p4 = mapToScene(p2);
-        qDebug() << p3.x() <<", " << p3.y() << "; "
-            <<p4.x() <<", " << p4.y(); 
-        emit sendAreapoints(p3, p4);
-        //TODO convert points p1 and p2 from view to scene points
+        if(p1.x() != p2.x() || p1.y() != p2.y())
+        {
+            QPointF p3, p4;
+            p3 = mapToScene(p1);
+            p4 = mapToScene(p2);
+            emit sendAreapoints(p3, p4);
+        }
     }
 }
 

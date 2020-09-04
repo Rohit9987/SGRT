@@ -77,6 +77,6 @@ public slots:
 	void display_Video(cv::Mat *frame);
     void hsvChanged(int lowH, int lowS, int lowV,
             int highH, int highS, int highV);
-    void receiveSelectRegion();
+    void receiveAreaPoints(QPointF p1, QPointF p2);
 };
 #endif	//MAINWINDOW

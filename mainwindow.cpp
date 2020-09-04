@@ -121,7 +121,7 @@ void MainWindow::openCamera()
 	connect(camera, &Camera::send_videoSignal, this, &MainWindow::display_Video);
 	connect(cameraThread, &QThread::started, camera, &Camera::read_camera);
     connect(cameraThread, &QThread::finished, cameraThread, &QThread::deleteLater);     
-    connect(imageView, &GraphicsView::sendAreapoints, camera, &Camera::receiveAreaPoints);
+    connect(imageView, &GraphicsView::sendAreapoints, this, &MainWindow::receiveAreaPoints);
 
 	camera->moveToThread(cameraThread);
 	cameraThread->start();
@@ -148,8 +148,7 @@ void MainWindow::display_Video(cv::Mat *frame)
 	imageView->setSceneRect(pixmap.rect());
 }
 
-void MainWindow::receiveSelectRegion()
+void MainWindow::receiveAreaPoints(QPointF p1, QPointF p2)
 {
-//  qDebug() << "Hello World";
-    //area_capture = true;
+    camera->receiveAreaPoints(p1, p2);
 }

@@ -26,11 +26,13 @@ public:
 	
     void hsvChanged(int lowHValue, int lowSValue, int lowVValue,
             int highHValue, int highSValue, int highVValue);
+
+    void receiveAreaPoints(QPointF p1, QPointF p2);
+
 signals:
 	void send_videoSignal(cv::Mat *);
 
 public slots:
-    void receiveAreaPoints(QPointF p1, QPointF p2);
 
 private:
 	bool running;
@@ -53,5 +55,9 @@ private:
     QFile mFile;    
     QString *filename;
     int n;
+    
+    //draw cv::Rect
+    cv::Point point1, point2;
+    bool draw_area_rect;
 };
 #endif
