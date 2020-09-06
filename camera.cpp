@@ -45,8 +45,9 @@ void Camera::read_camera()
             //TODO put an if clause to crop only when the mouse is released. 
             if(mouse_released)
             {
-                frame = frame(hsv_area);
-                //mouse_released = false;
+                cv::Mat croppedFrame = frame(hsv_area);
+                getMaxMinHSV(croppedFrame);
+                mouse_released = false;
             }
         }
 	    objectDetection(frame);
@@ -234,3 +235,43 @@ void Camera::mouseReleased()
 {
     mouse_released = true;
 }
+
+void Camera::getMaxMinHSV(cv::Mat& croppedFrame)
+{
+    std::vector<int> H_ROI, S_ROI, V_ROI;
+    int Hmin = 0,
+        Smin = 0,
+        Vmin = 0,
+        Hmax = 255,
+        Smax = 255,
+        Vmax = 255;
+
+    if(croppedFrame.rows >0 && croppedFrame.cols >0)
+    {
+        for(int i =0; i< croppedFrame.rows; i++)
+        {
+            for(int j =0; j <croppedFrame.cols; j++)
+            {
+                H_ROI.push_back((int) croppedFrame.at<cv::Vec3b>(j,i)[0]);
+                S_ROI.push_back((int) croppedFrame.at<cv::Vec3b>(j,i)[1]);
+                V_ROI.push_back((int) croppedFrame.at<cv::Vec3b>(j,i)[2]);
+            }
+        }
+        
+        Hmin = *std::min_element(H_ROI.begin(), H_ROI.end());
+        Hmax = *std::max_element(H_ROI.begin(), H_ROI.end());
+
+        Smin = *std::min_element(S_ROI.begin(), S_ROI.end());
+        Smax = *std::max_element(S_ROI.begin(), S_ROI.end());
+
+        Vmin = *std::min_element(V_ROI.begin(), V_ROI.end());
+        Vmax = *std::max_element(V_ROI.begin(), V_ROI.end());
+   
+        qDebug() << "Hue: " <<Hmin <<", " << Hmax
+            << "Saturation: " <<Smin << ", " << Smax
+            << "Value: " << Vmin << ", " << Vmax;
+
+        emit send_maxMinHSV(Hmin, Hmax, Smin, Smax, Vmin, Vmax);
+    }
+}
+ 

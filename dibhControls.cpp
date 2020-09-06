@@ -77,6 +77,21 @@ void dibhControls::hsv_changed()
     emit hsvChanged(lowHValue, lowSValue, lowVValue, highHValue, highSValue, highVValue); 
 }
 
+void dibhControls::recthsvChanged(int Hmin, int Hmax, int Smin, int Smax, int Vmin, int Vmax)
+{
+    lowH->setValue(Hmin);
+    highH->setValue(Hmax);
+    lowS->setValue(Smin);
+    highS->setValue(Smax);
+    lowV->setValue(Vmin);
+    highV->setValue(Vmax);
+
+    emit hsv_changed();
+        qDebug() << "Hue: " <<Hmin <<", " << Hmax
+            << "Saturation: " <<Smin << ", " << Smax
+            << "Value: " << Vmin << ", " << Vmax;
+}
+
 void dibhControls::selectRegion()
 {
     if(selectHSVRegion->text() == "Select Region")

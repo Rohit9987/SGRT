@@ -123,6 +123,7 @@ void MainWindow::openCamera()
 	connect(cameraThread, &QThread::started, camera, &Camera::read_camera);
     connect(cameraThread, &QThread::finished, cameraThread, &QThread::deleteLater);     
     connect(imageView, &GraphicsView::sendAreapoints, this, &MainWindow::receiveAreaPoints);
+    connect(camera, &Camera::send_maxMinHSV, dibhWindow, &dibhControls::recthsvChanged);
 
 	camera->moveToThread(cameraThread);
 	cameraThread->start();

@@ -32,6 +32,7 @@ public:
     void mouseReleased();
 signals:
 	void send_videoSignal(cv::Mat *);
+    void send_maxMinHSV(int Hmin, int Hmax, int Smin, int Smax, int Vmin, int Vmax);
 
 public slots:
 
@@ -56,6 +57,8 @@ private:
     QFile mFile;    
     QString *filename;
     int n;
+    void getMaxMinHSV(cv::Mat& croppedFrame);
+
     
     //draw cv::Rect
     cv::Point point1, point2;

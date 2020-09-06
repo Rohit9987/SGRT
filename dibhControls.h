@@ -29,6 +29,7 @@ private slots:
 
 public slots:
     void areaSet();
+    void recthsvChanged(int Hmin, int Hmax, int Smin, int Smax, int Vmin, int Vmax);
 
 signals:
     void hsvChanged(int lowH, int lowS, int lowV,
