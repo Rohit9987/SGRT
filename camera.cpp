@@ -6,14 +6,20 @@
 Camera::Camera(QMutex *lock): data_lock(lock) 
 {
 	camera = 0;
-    lbpClassifier = new cv::CascadeClassifier(OPENCV_LBP_DIR "lbpcascade_frontalface.xml");
-    haarClassifier = new cv::CascadeClassifier(OPENCV_DATA_DIR "haarcascade_frontalface_default.xml");
-    mark_detector = cv::face::createFacemarkLBF();
-    QString model_data = QApplication::instance()->applicationDirPath() +"/data/lbfmodel.yaml";
-    mark_detector->loadModel(model_data.toStdString());
+//    lbpClassifier = new cv::CascadeClassifier(OPENCV_LBP_DIR "lbpcascade_frontalface.xml");
+//    haarClassifier = new cv::CascadeClassifier(OPENCV_DATA_DIR "haarcascade_frontalface_default.xml");
+//    mark_detector = cv::face::createFacemarkLBF();
+//    QString model_data = QApplication::instance()->applicationDirPath() +"/data/lbfmodel.yaml";
+//    mark_detector->loadModel(model_data.toStdString());
 
     lowH = 50; lowS = 40; lowV = 70;
     highH = 255; highS = 255; highV = 255;
+
+    filename = nullptr; 
+    n = 0;
+
+    draw_area_rect = false;
+    mouse_released = false;
 }
 
 void Camera::read_camera()
@@ -32,7 +38,23 @@ void Camera::read_camera()
 
 //		cvtColor(frame, frame, cv::COLOR_BGR2RGB);
 //        detectFaces(frame);
-
+        if(draw_area_rect)
+        {
+            cv::Rect hsv_area= cv::Rect(point1, point2);
+            cv::rectangle(frame, hsv_area, cv::Scalar(0, 150, 20));
+            //TODO put an if clause to crop only when the mouse is released. 
+            if(mouse_released)
+            {
+                cv::Mat croppedFrame = frame(hsv_area);
+                cv::Mat hsvImage;
+                cv::cvtColor(croppedFrame, hsvImage, cv::COLOR_BGR2HSV);
+                cv::GaussianBlur(hsvImage, hsvImage, cv::Size(3, 3), 0);
+                cv::dilate(hsvImage, hsvImage, 0);
+                cv::erode(hsvImage, hsvImage, 0);
+                getMaxMinHSV(hsvImage);
+                mouse_released = false;
+            }
+        }
 	    objectDetection(frame);
         data_lock->lock();
             frame_send = frame;
@@ -131,6 +153,7 @@ void Camera::objectDetection(cv::Mat& frame)
     cv::GaussianBlur(threshImage, threshImage, cv::Size(3, 3), 0);
     cv::dilate(threshImage, threshImage, 0);
     cv::erode(threshImage, threshImage, 0);
+    drawContours(threshImage);
     cv::cvtColor(threshImage, threshImage, cv::COLOR_GRAY2RGB);
     frame = threshImage;
 }
@@ -144,3 +167,116 @@ void Camera::hsvChanged(int lowHValue, int lowSValue, int lowVValue, int highHVa
     highS = highSValue;
     highV = highVValue;
 }
+
+// TODO Need to insert a cv::Rect
+void Camera::drawContours(cv::Mat& frame)
+{
+    vector<vector<cv::Point>> contours;
+    vector<cv::Vec4i> heirarchy;
+
+    cv::findContours(frame, contours, heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+    //cv::Mat drawing = cv::Mat::zeros( frame.size(), CV_8UC3);
+
+    for(size_t i=0; i < contours.size(); i++)
+    {
+        cv::Scalar color = cv::Scalar(120, 0, 0);
+        cv::drawContours(frame, contours, (int) i, color, 2, cv::LINE_8, heirarchy, 0);
+    }
+
+    //TODO modify
+    if(n < 100)
+    {
+        for(size_t i =0; i < contours.size();i++)
+        {
+            for(size_t j = 0; j <contours[i].size(); j++)
+            {
+                writeFile(contours[i][j]);
+
+            }
+        }
+    }
+    else
+    {
+        mFile.close();
+        delete filename;
+        filename = nullptr;
+    }
+}
+
+    //TODO modify this code to detect contours
+    //Let RTT select an area to detect the motion initially(simulation)
+    //The same area can be retraced 
+void Camera::writeFile(cv::Point point)
+{
+    if(!filename)
+        filename = new QString("/home/rohit/Desktop/SGRT/Surface guidance/outputfile");
+        
+    if(!mFile.isOpen())
+    {
+        mFile.setFileName(*filename);
+        if(!mFile.open(QFile::WriteOnly | QFile::Text))
+        {
+            qDebug() << "Could not open the file";
+            return;
+        }
+    }
+    
+    QTextStream mStream(&mFile);
+    mStream << QString::number(point.x) <<" " << QString::number(point.y) <<"\n";
+    mFile.flush();
+    n++;
+}
+
+void Camera::receiveAreaPoints(QPointF p1, QPointF p2)
+{
+    point1.x = p1.x();
+    point1.y = p1.y();
+    point2.x = p2.x();
+    point2.y = p2.y();
+    draw_area_rect = true;
+}
+
+void Camera::mouseReleased()
+{
+    mouse_released = true;
+}
+
+void Camera::getMaxMinHSV(cv::Mat& croppedFrame)
+{
+    std::vector<int> H_ROI, S_ROI, V_ROI;
+    int Hmin = 0,
+        Smin = 0,
+        Vmin = 0,
+        Hmax = 255,
+        Smax = 255,
+        Vmax = 255;
+
+    if(croppedFrame.rows >0 && croppedFrame.cols >0)
+    {
+        for(int i =0; i< croppedFrame.rows; i++)
+        {
+            for(int j =0; j <croppedFrame.cols; j++)
+            {
+                H_ROI.push_back((int) croppedFrame.at<cv::Vec3b>(j,i)[0]);
+                S_ROI.push_back((int) croppedFrame.at<cv::Vec3b>(j,i)[1]);
+                V_ROI.push_back((int) croppedFrame.at<cv::Vec3b>(j,i)[2]);
+            }
+        }
+        
+        Hmin = *std::min_element(H_ROI.begin(), H_ROI.end());
+        Hmax = *std::max_element(H_ROI.begin(), H_ROI.end());
+
+        Smin = *std::min_element(S_ROI.begin(), S_ROI.end());
+        Smax = *std::max_element(S_ROI.begin(), S_ROI.end());
+
+        Vmin = *std::min_element(V_ROI.begin(), V_ROI.end());
+        Vmax = *std::max_element(V_ROI.begin(), V_ROI.end());
+   
+        qDebug() << "Hue: " <<Hmin <<", " << Hmax
+            << "Saturation: " <<Smin << ", " << Smax
+            << "Value: " << Vmin << ", " << Vmax;
+
+        emit send_maxMinHSV(Hmin, Hmax, Smin, Smax, Vmin, Vmax);
+    }
+}
+ 

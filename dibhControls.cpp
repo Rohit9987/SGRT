@@ -59,6 +59,10 @@ dibhControls::dibhControls(QWidget *parent): QDialog(parent)
     highV->setMaximum(255);
     highV->setValue(255);
     connect(highV, &QSlider::valueChanged, this, &dibhControls::hsv_changed);
+
+    selectHSVRegion = new QPushButton("Select Region",this);
+    main_layout->addWidget(selectHSVRegion, 6, 0 , 1, 1, Qt::AlignLeft);
+    connect(selectHSVRegion, &QPushButton::clicked, this, &dibhControls::selectRegion);
 }
 
 void dibhControls::hsv_changed()
@@ -71,4 +75,33 @@ void dibhControls::hsv_changed()
     highVValue = highV->value();
 
     emit hsvChanged(lowHValue, lowSValue, lowVValue, highHValue, highSValue, highVValue); 
+}
+
+void dibhControls::recthsvChanged(int Hmin, int Hmax, int Smin, int Smax, int Vmin, int Vmax)
+{
+    lowH->setValue(Hmin);
+    highH->setValue(Hmax);
+    lowS->setValue(Smin);
+    highS->setValue(Smax);
+    lowV->setValue(Vmin);
+    highV->setValue(Vmax);
+
+    emit hsv_changed();
+        qDebug() << "Hue: " <<Hmin <<", " << Hmax
+            << "Saturation: " <<Smin << ", " << Smax
+            << "Value: " << Vmin << ", " << Vmax;
+}
+
+void dibhControls::selectRegion()
+{
+    if(selectHSVRegion->text() == "Select Region")
+        selectHSVRegion->setText("Cancel");
+    else
+        selectHSVRegion->setText("Select Region");
+    emit sendSelectRegion();
+}
+
+void dibhControls::areaSet()
+{
+    selectHSVRegion->setText("Select Region");
 }

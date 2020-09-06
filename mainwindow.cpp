@@ -7,14 +7,12 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 	createAction();
     data_lock = new QMutex();
     dibhWindow = nullptr;
-
 }
 
 MainWindow::~MainWindow()
 {
     disconnect(camera, &Camera::send_videoSignal, this, &MainWindow::display_Video);
 	cameraThread->exit();
-
 }
 
 void MainWindow::initUI()
@@ -26,7 +24,7 @@ void MainWindow::initUI()
 	QGridLayout *main_layout = new QGridLayout(widget);
 	
 	imageScene = new QGraphicsScene(widget);
-	imageView = new QGraphicsView(imageScene);
+	imageView = new GraphicsView(imageScene);
 	main_layout->addWidget(imageView, 0, 0, 12, 3);
 
 	//____OPTIONS____LAYOUT____
@@ -80,6 +78,7 @@ void MainWindow::createAction()
 	connect(exitAction, &QAction::triggered, QApplication::instance(), &QCoreApplication::quit);
 
     connect(detectButton, &QPushButton::clicked, this, &MainWindow::showdibhWindow); 
+    connect(imageView, &GraphicsView::areaSetSignal, this, &MainWindow::mouseReleased);
 }
 
 
@@ -101,6 +100,8 @@ void MainWindow::showdibhWindow()
     {    
         dibhWindow = new dibhControls(this);
         connect(dibhWindow, &dibhControls::hsvChanged, this, &MainWindow::hsvChanged);
+        connect(dibhWindow, &dibhControls::sendSelectRegion, imageView, &GraphicsView::setAreaCapture);
+        connect(imageView, &GraphicsView::areaSetSignal, dibhWindow, &dibhControls::areaSet);
     }
     dibhWindow->show();
 }
@@ -121,6 +122,8 @@ void MainWindow::openCamera()
 	connect(camera, &Camera::send_videoSignal, this, &MainWindow::display_Video);
 	connect(cameraThread, &QThread::started, camera, &Camera::read_camera);
     connect(cameraThread, &QThread::finished, cameraThread, &QThread::deleteLater);     
+    connect(imageView, &GraphicsView::sendAreapoints, this, &MainWindow::receiveAreaPoints);
+    connect(camera, &Camera::send_maxMinHSV, dibhWindow, &dibhControls::recthsvChanged);
 
 	camera->moveToThread(cameraThread);
 	cameraThread->start();
@@ -145,4 +148,15 @@ void MainWindow::display_Video(cv::Mat *frame)
 	imageScene->addPixmap(pixmap);
 	imageScene->update();
 	imageView->setSceneRect(pixmap.rect());
+}
+
+void MainWindow::receiveAreaPoints(QPointF p1, QPointF p2)
+{
+    camera->receiveAreaPoints(p1, p2);
+}
+
+void MainWindow::mouseReleased()
+{
+    if(camera != nullptr)
+        camera->mouseReleased();
 }

@@ -4,10 +4,15 @@
 #include <QObject>
 #include <QImage>
 #include <QMutex>
+#include <QFile>
+#include <QTextStream>
 
 #include "opencv2/opencv.hpp"
 #include "opencv2/objdetect.hpp"
 #include "opencv2/face.hpp"
+#include "opencv2/imgcodecs.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
 
 using namespace std;
 
@@ -21,10 +26,15 @@ public:
 	
     void hsvChanged(int lowHValue, int lowSValue, int lowVValue,
             int highHValue, int highSValue, int highVValue);
+
+    void receiveAreaPoints(QPointF p1, QPointF p2);
+    
+    void mouseReleased();
 signals:
 	void send_videoSignal(cv::Mat *);
+    void send_maxMinHSV(int Hmin, int Hmax, int Smin, int Smax, int Vmin, int Vmax);
 
-//public slots:
+public slots:
 
 private:
 	bool running;
@@ -40,5 +50,19 @@ private:
     //object detection
     int lowH, lowS, lowV, highH, highS, highV;
     void objectDetection(cv::Mat& frame);
+    void drawContours(cv::Mat& frame);
+    
+    //TODO modify
+    void writeFile(cv::Point point);
+    QFile mFile;    
+    QString *filename;
+    int n;
+    void getMaxMinHSV(cv::Mat& croppedFrame);
+
+    
+    //draw cv::Rect
+    cv::Point point1, point2;
+    bool draw_area_rect, mouse_released;
+    cv::Rect roi;
 };
 #endif

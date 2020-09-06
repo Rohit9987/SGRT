@@ -24,6 +24,8 @@
 #include "opencv2/opencv.hpp"
 #include "camera.h"
 #include "dibhControls.h"
+#include "graphicsview.h"
+
 class MainWindow: public QMainWindow
 {
 	Q_OBJECT
@@ -38,7 +40,8 @@ private:
 	QAction * exitAction;
 
 	QGraphicsScene *imageScene;
-	QGraphicsView *imageView;
+	//QGraphicsView *imageView;
+    GraphicsView *imageView;
 
 	QStatusBar *mainStatusBar;
 	QLabel *mainStatusLabel;
@@ -65,13 +68,16 @@ private:
 	 */
 	void createAction();
 
+
 private slots:
 	void showCameraInfo();
 	void openCamera();
     void showdibhWindow();
+    void mouseReleased();
 public slots:
 	void display_Video(cv::Mat *frame);
     void hsvChanged(int lowH, int lowS, int lowV,
             int highH, int highS, int highV);
+    void receiveAreaPoints(QPointF p1, QPointF p2);
 };
 #endif	//MAINWINDOW
