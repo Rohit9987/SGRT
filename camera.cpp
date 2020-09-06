@@ -6,11 +6,11 @@
 Camera::Camera(QMutex *lock): data_lock(lock) 
 {
 	camera = 0;
-    lbpClassifier = new cv::CascadeClassifier(OPENCV_LBP_DIR "lbpcascade_frontalface.xml");
-    haarClassifier = new cv::CascadeClassifier(OPENCV_DATA_DIR "haarcascade_frontalface_default.xml");
-    mark_detector = cv::face::createFacemarkLBF();
-    QString model_data = QApplication::instance()->applicationDirPath() +"/data/lbfmodel.yaml";
-    mark_detector->loadModel(model_data.toStdString());
+//    lbpClassifier = new cv::CascadeClassifier(OPENCV_LBP_DIR "lbpcascade_frontalface.xml");
+//    haarClassifier = new cv::CascadeClassifier(OPENCV_DATA_DIR "haarcascade_frontalface_default.xml");
+//    mark_detector = cv::face::createFacemarkLBF();
+//    QString model_data = QApplication::instance()->applicationDirPath() +"/data/lbfmodel.yaml";
+//    mark_detector->loadModel(model_data.toStdString());
 
     lowH = 50; lowS = 40; lowV = 70;
     highH = 255; highS = 255; highV = 255;
@@ -46,7 +46,12 @@ void Camera::read_camera()
             if(mouse_released)
             {
                 cv::Mat croppedFrame = frame(hsv_area);
-                getMaxMinHSV(croppedFrame);
+                cv::Mat hsvImage;
+                cv::cvtColor(croppedFrame, hsvImage, cv::COLOR_BGR2HSV);
+                cv::GaussianBlur(hsvImage, hsvImage, cv::Size(3, 3), 0);
+                cv::dilate(hsvImage, hsvImage, 0);
+                cv::erode(hsvImage, hsvImage, 0);
+                getMaxMinHSV(hsvImage);
                 mouse_released = false;
             }
         }
