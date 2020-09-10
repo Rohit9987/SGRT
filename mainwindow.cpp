@@ -7,6 +7,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 	createAction();
     data_lock = new QMutex();
     dibhWindow = nullptr;
+    camera = nullptr;
 }
 
 MainWindow::~MainWindow()
@@ -79,6 +80,7 @@ void MainWindow::createAction()
 
     connect(detectButton, &QPushButton::clicked, this, &MainWindow::showdibhWindow); 
     connect(imageView, &GraphicsView::areaSetSignal, this, &MainWindow::mouseReleased);
+    connect(imageView, &GraphicsView::contourAreaSignal, this, &MainWindow::receiveContourSlot);
 }
 
 
@@ -101,7 +103,9 @@ void MainWindow::showdibhWindow()
         dibhWindow = new dibhControls(this);
         connect(dibhWindow, &dibhControls::hsvChanged, this, &MainWindow::hsvChanged);
         connect(dibhWindow, &dibhControls::sendSelectRegion, imageView, &GraphicsView::setAreaCapture);
+        connect(dibhWindow, &dibhControls::sendContourRegion, imageView, &GraphicsView::setContourAreaCapture);
         connect(imageView, &GraphicsView::areaSetSignal, dibhWindow, &dibhControls::areaSet);
+        connect(imageView, &GraphicsView::contourAreaSignal, dibhWindow, &dibhControls::contourAreaSet);
     }
     dibhWindow->show();
 }
@@ -114,8 +118,9 @@ void MainWindow::hsvChanged(int lowH, int lowS, int lowV,
 }
 void MainWindow::openCamera()
 {
-//	qDebug() <<"OpenCamera method";
-	camera = new Camera(data_lock);	//TODO destroy these objects
+    if(camera != nullptr)
+        return;
+    camera = new Camera(data_lock);	//TODO destroy these objects
 	cameraThread = new QThread;
     showdibhWindow();
 
@@ -131,7 +136,6 @@ void MainWindow::openCamera()
 
 void MainWindow::display_Video(cv::Mat *frame)
 {
-//    qDebug() << "Hello from display_Video";
     data_lock->lock();
 	cv::Mat displayFrame = *frame;
     data_lock->unlock();
@@ -152,7 +156,13 @@ void MainWindow::display_Video(cv::Mat *frame)
 
 void MainWindow::receiveAreaPoints(QPointF p1, QPointF p2)
 {
-    camera->receiveAreaPoints(p1, p2);
+    if(camera != nullptr)
+        camera->receiveAreaPoints(p1, p2);
+}
+void MainWindow::receiveContourSlot()
+{
+    if(camera != nullptr)
+        camera->contourAreaSelected(); 
 }
 
 void MainWindow::mouseReleased()

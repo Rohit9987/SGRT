@@ -79,5 +79,6 @@ public slots:
     void hsvChanged(int lowH, int lowS, int lowV,
             int highH, int highS, int highV);
     void receiveAreaPoints(QPointF p1, QPointF p2);
+    void receiveContourSlot();
 };
 #endif	//MAINWINDOW

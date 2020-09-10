@@ -20,6 +20,7 @@ Camera::Camera(QMutex *lock): data_lock(lock)
 
     draw_area_rect = false;
     mouse_released = false;
+    contour_area_selection = false;
 }
 
 void Camera::read_camera()
@@ -27,7 +28,15 @@ void Camera::read_camera()
 	running = true;
 	cv::VideoCapture cap(camera);
 	cv::Mat frame, frame_send;
-	
+
+    int width, height;
+    width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+    height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+    point1.x = 0; 
+    point1.y = 0;
+    point2.x = width;
+    point2.y = height;
+    roi = cv::Rect(point1, point2);
 	//load face detection here
 	
 	while(running)
@@ -42,8 +51,8 @@ void Camera::read_camera()
         {
             cv::Rect hsv_area= cv::Rect(point1, point2);
             cv::rectangle(frame, hsv_area, cv::Scalar(0, 150, 20));
-            //TODO put an if clause to crop only when the mouse is released. 
-            if(mouse_released)
+
+            if(mouse_released && !contour_area_selection)
             {
                 cv::Mat croppedFrame = frame(hsv_area);
                 cv::Mat hsvImage;
@@ -71,7 +80,6 @@ void Camera::detectFaces(cv::Mat& frame)
     vector<cv::Rect> faces;
     cv::Mat gray_frame;
     cv::cvtColor(frame, gray_frame, cv::COLOR_BGR2GRAY);
-
 
     lbpClassifier->detectMultiScale(gray_frame, faces, 1.3, 5);
     //haarClassifier->detectMultiScale(frame, faces, 1.3, 5);
@@ -146,6 +154,7 @@ void Camera::objectDetection(cv::Mat& frame)
     //these number have to be input from the mainwindow options
 
     cv::cvtColor(frame, hsvImage, cv::COLOR_BGR2HSV);
+    cv::GaussianBlur(hsvImage, hsvImage, cv::Size(5, 5), 0);
     cv::inRange(hsvImage, cv::Scalar(lowH, lowS, lowV),
             cv::Scalar(highH, highS, highV), threshImage);
     
@@ -171,22 +180,30 @@ void Camera::hsvChanged(int lowHValue, int lowSValue, int lowVValue, int highHVa
 // TODO Need to insert a cv::Rect
 void Camera::drawContours(cv::Mat& frame)
 {
+    cv::Mat contour_frame;
+    if(contour_area_selection)
+    {
+        roi = cv::Rect(point1, point2);
+        contour_area_selection = false; 
+    }
+
+    contour_frame = frame(roi);
+
     vector<vector<cv::Point>> contours;
     vector<cv::Vec4i> heirarchy;
 
-    cv::findContours(frame, contours, heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+    cv::findContours(contour_frame, contours, heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
     //RETR_EXTERNAL
     //RETR_TREE
     //CHAIN_APPROX_TC89_L1
     //CHAIN_APPROX_TC89_KCOS
     //CHAIN_APPROX_SIMPLE
     //CHAIN_APPROX_NONE
-    //cv::Mat drawing = cv::Mat::zeros( frame.size(), CV_8UC3);
 
     for(size_t i=0; i < contours.size(); i++)
     {
         cv::Scalar color = cv::Scalar(120, 0, 0);
-        cv::drawContours(frame, contours, (int) i, color, 2, cv::LINE_8, heirarchy, 0);
+        cv::drawContours(frame(roi), contours, (int) i, color, 2, cv::LINE_8, heirarchy, 0);
     }
 
     //TODO modify
@@ -245,6 +262,11 @@ void Camera::receiveAreaPoints(QPointF p1, QPointF p2)
 void Camera::mouseReleased()
 {
     mouse_released = true;
+}
+
+void Camera::contourAreaSelected()
+{
+    contour_area_selection = true;
 }
 
 void Camera::getMaxMinHSV(cv::Mat& croppedFrame)
