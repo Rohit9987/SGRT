@@ -3,6 +3,10 @@
 #include <QDebug>
 #include <QApplication>
 
+//TODO
+//the contours take up memory and slows down the process
+//use a smaller roi to set the region for contour detection
+
 Camera::Camera(QMutex *lock): data_lock(lock) 
 {
 	camera = 0;
@@ -183,6 +187,10 @@ void Camera::drawContours(cv::Mat& frame)
     cv::Mat contour_frame;
     if(contour_area_selection)
     {
+        point1.x = point1.x+5;
+        point1.y = point1.y+5;
+        point2.x = point2.x-5;
+        point2.y = point2.y-5;
         roi = cv::Rect(point1, point2);
         contour_area_selection = false; 
     }
@@ -207,13 +215,14 @@ void Camera::drawContours(cv::Mat& frame)
     }
 
     //TODO modify
-    if(n < 100)
+    if(n < 100000)
     {
         for(size_t i =0; i < contours.size();i++)
         {
             for(size_t j = 0; j <contours[i].size(); j++)
             {
-                writeFile(contours[i][j]);
+                qDebug() << contours[i][j].x << ", " <<contours[i][j].y;
+               // writeFile(contours[i][j]);
 
             }
         }
