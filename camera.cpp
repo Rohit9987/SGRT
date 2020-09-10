@@ -48,7 +48,7 @@ void Camera::read_camera()
                 cv::Mat croppedFrame = frame(hsv_area);
                 cv::Mat hsvImage;
                 cv::cvtColor(croppedFrame, hsvImage, cv::COLOR_BGR2HSV);
-                cv::GaussianBlur(hsvImage, hsvImage, cv::Size(3, 3), 0);
+                cv::GaussianBlur(hsvImage, hsvImage, cv::Size(5, 5), 0);
                 cv::dilate(hsvImage, hsvImage, 0);
                 cv::erode(hsvImage, hsvImage, 0);
                 getMaxMinHSV(hsvImage);
@@ -150,7 +150,7 @@ void Camera::objectDetection(cv::Mat& frame)
             cv::Scalar(highH, highS, highV), threshImage);
     
     //blur, dilate and erode
-    cv::GaussianBlur(threshImage, threshImage, cv::Size(3, 3), 0);
+    cv::GaussianBlur(threshImage, threshImage, cv::Size(5, 5), 0);
     cv::dilate(threshImage, threshImage, 0);
     cv::erode(threshImage, threshImage, 0);
     drawContours(threshImage);
@@ -175,6 +175,12 @@ void Camera::drawContours(cv::Mat& frame)
     vector<cv::Vec4i> heirarchy;
 
     cv::findContours(frame, contours, heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+    //RETR_EXTERNAL
+    //RETR_TREE
+    //CHAIN_APPROX_TC89_L1
+    //CHAIN_APPROX_TC89_KCOS
+    //CHAIN_APPROX_SIMPLE
+    //CHAIN_APPROX_NONE
     //cv::Mat drawing = cv::Mat::zeros( frame.size(), CV_8UC3);
 
     for(size_t i=0; i < contours.size(); i++)
@@ -272,9 +278,9 @@ void Camera::getMaxMinHSV(cv::Mat& croppedFrame)
         Vmin = *std::min_element(V_ROI.begin(), V_ROI.end());
         Vmax = *std::max_element(V_ROI.begin(), V_ROI.end());
    
-        qDebug() << "Hue: " <<Hmin <<", " << Hmax
-            << "Saturation: " <<Smin << ", " << Smax
-            << "Value: " << Vmin << ", " << Vmax;
+  //      qDebug() << "Hue: " <<Hmin <<", " << Hmax
+   //         << "Saturation: " <<Smin << ", " << Smax
+     //       << "Value: " << Vmin << ", " << Vmax;
 
         emit send_maxMinHSV(Hmin, Hmax, Smin, Smax, Vmin, Vmax);
     }
