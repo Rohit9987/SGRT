@@ -51,7 +51,7 @@ private:
 
     //object detection
     int lowH, lowS, lowV, highH, highS, highV;
-    void objectDetection(cv::Mat& frame);
+    void objectDetection(cv::Mat& frame, cv::Mat& processedFrame);
     void drawContours(cv::Mat& frame);
     
     //TODO modify

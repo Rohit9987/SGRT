@@ -68,9 +68,9 @@ void Camera::read_camera()
                 mouse_released = false;
             }
         }
-	    objectDetection(frame);
+	//    objectDetection(frame);
         data_lock->lock();
-            frame_send = frame;
+            objectDetection(frame, frame_send);
         data_lock->unlock();
 		emit send_videoSignal(&frame_send);
     }
@@ -152,7 +152,7 @@ void Camera::poseEstimation(cv::Mat& frame, vector<cv::Point2f>& shapes)
     cv::line(frame, image_points[0], nose_end_point2D[0], cv::Scalar(255, 0, 0), 2);
 }
 
-void Camera::objectDetection(cv::Mat& frame)
+void Camera::objectDetection(cv::Mat& frame, cv::Mat& processedFrame)
 {
     cv::Mat hsvImage, threshImage;
     //these number have to be input from the mainwindow options
@@ -168,7 +168,7 @@ void Camera::objectDetection(cv::Mat& frame)
     cv::erode(threshImage, threshImage, 0);
     drawContours(threshImage);
     cv::cvtColor(threshImage, threshImage, cv::COLOR_GRAY2RGB);
-    frame = threshImage;
+    processedFrame = threshImage;
 }
 
 void Camera::hsvChanged(int lowHValue, int lowSValue, int lowVValue, int highHValue, int highSValue, int highVValue)
