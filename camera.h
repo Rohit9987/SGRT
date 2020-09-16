@@ -30,6 +30,8 @@ public:
     void receiveAreaPoints(QPointF p1, QPointF p2);
     
     void mouseReleased();
+
+    void contourAreaSelected();
 signals:
 	void send_videoSignal(cv::Mat *);
     void send_maxMinHSV(int Hmin, int Hmax, int Smin, int Smax, int Vmin, int Vmax);
@@ -53,12 +55,12 @@ private:
     void drawContours(cv::Mat& frame);
     
     //TODO modify
+    bool contour_area_selection;
     void writeFile(cv::Point point);
     QFile mFile;    
     QString *filename;
     int n;
     void getMaxMinHSV(cv::Mat& croppedFrame);
-
     
     //draw cv::Rect
     cv::Point point1, point2;

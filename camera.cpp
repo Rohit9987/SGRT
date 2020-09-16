@@ -3,6 +3,10 @@
 #include <QDebug>
 #include <QApplication>
 
+//TODO
+//the contours take up memory and slows down the process
+//use a smaller roi to set the region for contour detection
+
 Camera::Camera(QMutex *lock): data_lock(lock) 
 {
 	camera = 0;
@@ -20,6 +24,7 @@ Camera::Camera(QMutex *lock): data_lock(lock)
 
     draw_area_rect = false;
     mouse_released = false;
+    contour_area_selection = false;
 }
 
 void Camera::read_camera()
@@ -27,7 +32,15 @@ void Camera::read_camera()
 	running = true;
 	cv::VideoCapture cap(camera);
 	cv::Mat frame, frame_send;
-	
+
+    int width, height;
+    width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+    height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+    point1.x = 0; 
+    point1.y = 0;
+    point2.x = width;
+    point2.y = height;
+    roi = cv::Rect(point1, point2);
 	//load face detection here
 	
 	while(running)
@@ -42,13 +55,13 @@ void Camera::read_camera()
         {
             cv::Rect hsv_area= cv::Rect(point1, point2);
             cv::rectangle(frame, hsv_area, cv::Scalar(0, 150, 20));
-            //TODO put an if clause to crop only when the mouse is released. 
-            if(mouse_released)
+
+            if(mouse_released && !contour_area_selection)
             {
                 cv::Mat croppedFrame = frame(hsv_area);
                 cv::Mat hsvImage;
                 cv::cvtColor(croppedFrame, hsvImage, cv::COLOR_BGR2HSV);
-                cv::GaussianBlur(hsvImage, hsvImage, cv::Size(3, 3), 0);
+                cv::GaussianBlur(hsvImage, hsvImage, cv::Size(5, 5), 0);
                 cv::dilate(hsvImage, hsvImage, 0);
                 cv::erode(hsvImage, hsvImage, 0);
                 getMaxMinHSV(hsvImage);
@@ -71,7 +84,6 @@ void Camera::detectFaces(cv::Mat& frame)
     vector<cv::Rect> faces;
     cv::Mat gray_frame;
     cv::cvtColor(frame, gray_frame, cv::COLOR_BGR2GRAY);
-
 
     lbpClassifier->detectMultiScale(gray_frame, faces, 1.3, 5);
     //haarClassifier->detectMultiScale(frame, faces, 1.3, 5);
@@ -146,11 +158,12 @@ void Camera::objectDetection(cv::Mat& frame)
     //these number have to be input from the mainwindow options
 
     cv::cvtColor(frame, hsvImage, cv::COLOR_BGR2HSV);
+    cv::GaussianBlur(hsvImage, hsvImage, cv::Size(5, 5), 0);
     cv::inRange(hsvImage, cv::Scalar(lowH, lowS, lowV),
             cv::Scalar(highH, highS, highV), threshImage);
     
     //blur, dilate and erode
-    cv::GaussianBlur(threshImage, threshImage, cv::Size(3, 3), 0);
+    cv::GaussianBlur(threshImage, threshImage, cv::Size(5, 5), 0);
     cv::dilate(threshImage, threshImage, 0);
     cv::erode(threshImage, threshImage, 0);
     drawContours(threshImage);
@@ -171,26 +184,45 @@ void Camera::hsvChanged(int lowHValue, int lowSValue, int lowVValue, int highHVa
 // TODO Need to insert a cv::Rect
 void Camera::drawContours(cv::Mat& frame)
 {
+    cv::Mat contour_frame;
+    if(contour_area_selection)
+    {
+        point1.x = point1.x+5;
+        point1.y = point1.y+5;
+        point2.x = point2.x-5;
+        point2.y = point2.y-5;
+        roi = cv::Rect(point1, point2);
+        contour_area_selection = false; 
+    }
+
+    contour_frame = frame(roi);
+
     vector<vector<cv::Point>> contours;
     vector<cv::Vec4i> heirarchy;
 
-    cv::findContours(frame, contours, heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
-    //cv::Mat drawing = cv::Mat::zeros( frame.size(), CV_8UC3);
+    cv::findContours(contour_frame, contours, heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+    //RETR_EXTERNAL
+    //RETR_TREE
+    //CHAIN_APPROX_TC89_L1
+    //CHAIN_APPROX_TC89_KCOS
+    //CHAIN_APPROX_SIMPLE
+    //CHAIN_APPROX_NONE
 
     for(size_t i=0; i < contours.size(); i++)
     {
         cv::Scalar color = cv::Scalar(120, 0, 0);
-        cv::drawContours(frame, contours, (int) i, color, 2, cv::LINE_8, heirarchy, 0);
+        cv::drawContours(frame(roi), contours, (int) i, color, 2, cv::LINE_8, heirarchy, 0);
     }
 
     //TODO modify
-    if(n < 100)
+    if(n < 100000)
     {
         for(size_t i =0; i < contours.size();i++)
         {
             for(size_t j = 0; j <contours[i].size(); j++)
             {
-                writeFile(contours[i][j]);
+                qDebug() << contours[i][j].x << ", " <<contours[i][j].y;
+               // writeFile(contours[i][j]);
 
             }
         }
@@ -241,6 +273,11 @@ void Camera::mouseReleased()
     mouse_released = true;
 }
 
+void Camera::contourAreaSelected()
+{
+    contour_area_selection = true;
+}
+
 void Camera::getMaxMinHSV(cv::Mat& croppedFrame)
 {
     std::vector<int> H_ROI, S_ROI, V_ROI;
@@ -272,9 +309,9 @@ void Camera::getMaxMinHSV(cv::Mat& croppedFrame)
         Vmin = *std::min_element(V_ROI.begin(), V_ROI.end());
         Vmax = *std::max_element(V_ROI.begin(), V_ROI.end());
    
-        qDebug() << "Hue: " <<Hmin <<", " << Hmax
-            << "Saturation: " <<Smin << ", " << Smax
-            << "Value: " << Vmin << ", " << Vmax;
+  //      qDebug() << "Hue: " <<Hmin <<", " << Hmax
+   //         << "Saturation: " <<Smin << ", " << Smax
+     //       << "Value: " << Vmin << ", " << Vmax;
 
         emit send_maxMinHSV(Hmin, Hmax, Smin, Smax, Vmin, Vmax);
     }

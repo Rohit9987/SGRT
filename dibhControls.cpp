@@ -60,9 +60,13 @@ dibhControls::dibhControls(QWidget *parent): QDialog(parent)
     highV->setValue(255);
     connect(highV, &QSlider::valueChanged, this, &dibhControls::hsv_changed);
 
-    selectHSVRegion = new QPushButton("Select Region",this);
+    selectHSVRegion = new QPushButton("HSV Region",this);
     main_layout->addWidget(selectHSVRegion, 6, 0 , 1, 1, Qt::AlignLeft);
     connect(selectHSVRegion, &QPushButton::clicked, this, &dibhControls::selectRegion);
+    
+    selectContourRegion = new QPushButton("Contour Region", this);
+    main_layout->addWidget(selectContourRegion, 6, 1, 1, 1, Qt::AlignLeft);
+    connect(selectContourRegion, &QPushButton::clicked, this, &dibhControls::contourRegion);
 }
 
 void dibhControls::hsv_changed()
@@ -94,14 +98,43 @@ void dibhControls::recthsvChanged(int Hmin, int Hmax, int Smin, int Smax, int Vm
 
 void dibhControls::selectRegion()
 {
-    if(selectHSVRegion->text() == "Select Region")
+    if(selectHSVRegion->text() == "HSV Region")
+    {
+        if(selectContourRegion->text() == "Cancel")
+        {
+            emit sendContourRegion();
+            selectContourRegion->setText("Contour Region");
+        }
         selectHSVRegion->setText("Cancel");
+    
+    }
     else
-        selectHSVRegion->setText("Select Region");
+        selectHSVRegion->setText("HSV Region");
     emit sendSelectRegion();
 }
 
 void dibhControls::areaSet()
 {
-    selectHSVRegion->setText("Select Region");
+    selectHSVRegion->setText("HSV Region");
+}
+
+void dibhControls::contourAreaSet()
+{
+    selectContourRegion->setText("Contour Region");
+}
+
+void dibhControls::contourRegion()
+{
+    if(selectContourRegion->text() == "Contour Region")
+    {
+        if(selectHSVRegion->text() == "Cancel")
+        {
+            emit sendSelectRegion();
+            selectHSVRegion->setText("HSV Region");
+        }
+        selectContourRegion->setText("Cancel");
+    }
+    else
+        selectContourRegion->setText("Contour Region");
+    emit sendContourRegion();
 }

@@ -27,12 +27,15 @@ private slots:
 
 public slots:
     void setAreaCapture();    
+    void setContourAreaCapture();
 
 signals:
     void areaSetSignal();
     void sendAreapoints(QPointF p1, QPointF p2); 
+    void contourAreaSignal();
+
 private:
     QPoint p1, p2;
-    bool mouseDown, area_capture;
+    bool mouseDown, area_capture, contour_capture;
 };
-#endif  //GRAPHICSVIEW_H 
+ #endif  //GRAPHICSVIEW_H 
