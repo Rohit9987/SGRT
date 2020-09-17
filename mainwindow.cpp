@@ -3,6 +3,7 @@
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 {
+	setAttribute(Qt::WA_DeleteOnClose);
 	initUI();
 	createAction();
     data_lock = new QMutex();
@@ -19,11 +20,11 @@ MainWindow::~MainWindow()
 void MainWindow::initUI()
 {
 	showMaximized();
-	
+
 	QWidget *widget = new QWidget(this);
 
 	QGridLayout *main_layout = new QGridLayout(widget);
-	
+
 	imageScene = new QGraphicsScene(widget);
 	imageView = new GraphicsView(imageScene);
 	main_layout->addWidget(imageView, 0, 0, 12, 3);
@@ -34,7 +35,7 @@ void MainWindow::initUI()
 	options_layout->setAlignment(Qt::AlignTop);
 	QLabel *options = new QLabel(this);
 	options->setText("_________OPTIONS__________");
-	options_layout->addWidget(options, 0, 0, 1, 2, Qt::AlignTop | Qt::AlignCenter);	
+	options_layout->addWidget(options, 0, 0, 1, 2, Qt::AlignTop | Qt::AlignCenter);
 	//buttons to start camera and use CV
 	cameraButton = new QPushButton("Start Camera", this);
 	options_layout->addWidget(cameraButton, 1, 0, 1, 2, Qt::AlignCenter);
@@ -78,7 +79,7 @@ void MainWindow::createAction()
 	//connect(exitAction, &QAction::triggered, QApplication::instance(), &QCoreApplication::quit);
 	connect(exitAction, &QAction::triggered, QApplication::instance(), &QCoreApplication::quit);
 
-    connect(detectButton, &QPushButton::clicked, this, &MainWindow::showdibhWindow); 
+    connect(detectButton, &QPushButton::clicked, this, &MainWindow::showdibhWindow);
     connect(imageView, &GraphicsView::areaSetSignal, this, &MainWindow::mouseReleased);
     connect(imageView, &GraphicsView::contourAreaSignal, this, &MainWindow::receiveContourSlot);
 }
@@ -99,7 +100,7 @@ void MainWindow::showCameraInfo()
 void MainWindow::showdibhWindow()
 {
     if(dibhWindow == nullptr)
-    {    
+    {
         dibhWindow = new dibhControls(this);
         connect(dibhWindow, &dibhControls::hsvChanged, this, &MainWindow::hsvChanged);
         connect(dibhWindow, &dibhControls::sendSelectRegion, imageView, &GraphicsView::setAreaCapture);
@@ -126,7 +127,7 @@ void MainWindow::openCamera()
 
 	connect(camera, &Camera::send_videoSignal, this, &MainWindow::display_Video);
 	connect(cameraThread, &QThread::started, camera, &Camera::read_camera);
-    connect(cameraThread, &QThread::finished, cameraThread, &QThread::deleteLater);     
+    connect(cameraThread, &QThread::finished, cameraThread, &QThread::deleteLater);
     connect(imageView, &GraphicsView::sendAreapoints, this, &MainWindow::receiveAreaPoints);
     connect(camera, &Camera::send_maxMinHSV, dibhWindow, &dibhControls::recthsvChanged);
 
@@ -162,7 +163,7 @@ void MainWindow::receiveAreaPoints(QPointF p1, QPointF p2)
 void MainWindow::receiveContourSlot()
 {
     if(camera != nullptr)
-        camera->contourAreaSelected(); 
+        camera->contourAreaSelected();
 }
 
 void MainWindow::mouseReleased()
