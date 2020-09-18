@@ -53,7 +53,6 @@ void MainWindow::initUI()
 	QGridLayout *output_layout = new QGridLayout();
 	main_layout->addLayout(output_layout, 13, 0, 4, 1);
 
-
 	QLabel *output = new QLabel(this);
 	output->setText("OUTPUT:");
 	output_layout->addWidget(output, 0, 0, Qt::AlignTop | Qt::AlignLeft);
@@ -133,6 +132,8 @@ void MainWindow::openCamera()
 
 	camera->moveToThread(cameraThread);
 	cameraThread->start();
+
+	connect(dibhWindow, &dibhControls::sendColorScheme, this, &MainWindow::colorScheme);
 }
 
 void MainWindow::display_Video(cv::Mat *frame)
@@ -170,4 +171,9 @@ void MainWindow::mouseReleased()
 {
     if(camera != nullptr)
         camera->mouseReleased();
+}
+
+void MainWindow::colorScheme(bool color)
+{
+	camera->colorScheme(color);
 }

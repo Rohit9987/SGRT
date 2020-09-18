@@ -45,7 +45,7 @@ private:
 
 	QStatusBar *mainStatusBar;
 	QLabel *mainStatusLabel;
-	
+
 	//members of options layout
 	QPushButton *cameraButton;
 	QPushButton *detectButton;
@@ -62,7 +62,7 @@ private:
 	 *All layout designs
 	 */
 	void initUI();
-	 
+
 	/**
 	 *
 	 */
@@ -74,11 +74,13 @@ private slots:
 	void openCamera();
     void showdibhWindow();
     void mouseReleased();
+
 public slots:
 	void display_Video(cv::Mat *frame);
     void hsvChanged(int lowH, int lowS, int lowV,
             int highH, int highS, int highV);
     void receiveAreaPoints(QPointF p1, QPointF p2);
     void receiveContourSlot();
+	void colorScheme(bool);
 };
 #endif	//MAINWINDOW

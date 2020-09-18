@@ -7,7 +7,7 @@
 #include <QLabel>
 #include <QGridLayout>
 #include <QPushButton>
-
+#include <QRadioButton>
 
 class dibhControls: public QDialog
 {
@@ -22,21 +22,27 @@ private:
            *highHueLabel, *highSaturationLabel, *highValueLabel;
     int lowHValue, lowSValue, lowVValue, highHValue, highSValue, highVValue;
     QPushButton *selectHSVRegion, *selectContourRegion;
-    
+
+    //Color B&W modes
+    QRadioButton *colorRadioButton, *bwRadioButton;
+
 private slots:
     void hsv_changed();
     void selectRegion();
     void contourRegion();
+    void colorScheme(bool);
 
 public slots:
     void areaSet();
     void recthsvChanged(int Hmin, int Hmax, int Smin, int Smax, int Vmin, int Vmax);
     void contourAreaSet();
+
 signals:
     void hsvChanged(int lowH, int lowS, int lowV,
             int highH, int highS, int highV);
     void sendSelectRegion();
     void sendContourRegion();
+    void sendColorScheme(bool);
 };
 
 #endif  // DIBHCONTROLS
