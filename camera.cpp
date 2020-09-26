@@ -84,6 +84,7 @@ void Camera::calculateHSV(cv::Mat& frame)
                 cv::erode(hsvImage, hsvImage, 0);
                 getMaxMinHSV(hsvImage);
                 mouse_released = false;
+                draw_area_rect= false;
             }
 }
 
@@ -177,7 +178,7 @@ void Camera::objectDetection(cv::Mat& frame, cv::Mat& processedFrame)
     drawContours(frame, threshImage);
     if(color)
     {
-        processedFrame = frame.clone();
+        cvtColor(frame, processedFrame, cv::COLOR_BGR2RGB);
         return;
     }
     cv::cvtColor(threshImage, threshImage, cv::COLOR_GRAY2RGB);
@@ -200,10 +201,6 @@ void Camera::drawContours(cv::Mat& frame, cv::Mat& bwframe)
     cv::Mat contour_frame;
     if(contour_area_selection)
     {
-        point1.x = point1.x+5;
-        point1.y = point1.y+5;
-        point2.x = point2.x-5;
-        point2.y = point2.y-5;
         roi = cv::Rect(point1, point2);
         contour_area_selection = false;
     }
