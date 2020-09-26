@@ -26,7 +26,7 @@ Camera::Camera(QMutex *lock): data_lock(lock)
     mouse_released = false;
     contour_area_selection = false;
 
-//	color = false;
+	color = false;
 }
 
 void Camera::read_camera()
@@ -58,19 +58,11 @@ void Camera::read_camera()
             calculateHSV(frame);
         }
 
-		if(!color)
-		{
-			data_lock->lock();
-				objectDetection(frame, frame_send);
-			data_lock->unlock();
-		}
-		else
-		{
-			data_lock->lock();
-				frame_send = frame;
-			data_lock->unlock();
-		}
-		emit send_videoSignal(&frame_send);
+		data_lock->lock();
+			objectDetection(frame, frame_send);
+		data_lock->unlock();
+		
+        emit send_videoSignal(&frame_send);
     }
 
     cap.release();
@@ -94,6 +86,7 @@ void Camera::calculateHSV(cv::Mat& frame)
                 mouse_released = false;
             }
 }
+
 void Camera::detectFaces(cv::Mat& frame)
 {
     vector<cv::Rect> faces;
@@ -181,7 +174,12 @@ void Camera::objectDetection(cv::Mat& frame, cv::Mat& processedFrame)
     cv::GaussianBlur(threshImage, threshImage, cv::Size(5, 5), 0);
     cv::dilate(threshImage, threshImage, 0);
     cv::erode(threshImage, threshImage, 0);
-    drawContours(threshImage);
+    drawContours(frame, threshImage);
+    if(color)
+    {
+        processedFrame = frame.clone();
+        return;
+    }
     cv::cvtColor(threshImage, threshImage, cv::COLOR_GRAY2RGB);
     processedFrame = threshImage;
 }
@@ -197,7 +195,7 @@ void Camera::hsvChanged(int lowHValue, int lowSValue, int lowVValue, int highHVa
 }
 
 // TODO Need to insert a cv::Rect
-void Camera::drawContours(cv::Mat& frame)
+void Camera::drawContours(cv::Mat& frame, cv::Mat& bwframe)
 {
     cv::Mat contour_frame;
     if(contour_area_selection)
@@ -210,7 +208,7 @@ void Camera::drawContours(cv::Mat& frame)
         contour_area_selection = false;
     }
 
-    contour_frame = frame(roi);
+    contour_frame = bwframe(roi);
 
     vector<vector<cv::Point>> contours;
     vector<cv::Vec4i> heirarchy;
@@ -226,7 +224,10 @@ void Camera::drawContours(cv::Mat& frame)
     for(size_t i=0; i < contours.size(); i++)
     {
         cv::Scalar color = cv::Scalar(120, 0, 0);
-        cv::drawContours(frame(roi), contours, (int) i, color, 2, cv::LINE_8, heirarchy, 0);
+        if(this->color)
+            cv::drawContours(frame(roi), contours, (int) i, color, 2, cv::LINE_8, heirarchy, 0);
+        else
+            cv::drawContours(bwframe(roi), contours, (int) i, color, 2, cv::LINE_8, heirarchy, 0);
     }
 
     //TODO modify
@@ -323,10 +324,6 @@ void Camera::getMaxMinHSV(cv::Mat& croppedFrame)
 
         Vmin = *std::min_element(V_ROI.begin(), V_ROI.end());
         Vmax = *std::max_element(V_ROI.begin(), V_ROI.end());
-
-  //      qDebug() << "Hue: " <<Hmin <<", " << Hmax
-   //         << "Saturation: " <<Smin << ", " << Smax
-     //       << "Value: " << Vmin << ", " << Vmax;
 
         emit send_maxMinHSV(Hmin, Hmax, Smin, Smax, Vmin, Vmax);
     }
