@@ -72,5 +72,8 @@ private:
 
 	//ColorScheme for video
 	bool color;
+
+    void calculateHSV(cv::Mat& frame);
+
 };
 #endif

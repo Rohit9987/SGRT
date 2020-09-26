@@ -55,20 +55,7 @@ void Camera::read_camera()
 //        detectFaces(frame);
         if(draw_area_rect)
         {
-            cv::Rect hsv_area= cv::Rect(point1, point2);
-            cv::rectangle(frame, hsv_area, cv::Scalar(0, 150, 20));
-
-            if(mouse_released && !contour_area_selection)
-            {
-                cv::Mat croppedFrame = frame(hsv_area);
-                cv::Mat hsvImage;
-                cv::cvtColor(croppedFrame, hsvImage, cv::COLOR_BGR2HSV);
-                cv::GaussianBlur(hsvImage, hsvImage, cv::Size(5, 5), 0);
-                cv::dilate(hsvImage, hsvImage, 0);
-                cv::erode(hsvImage, hsvImage, 0);
-                getMaxMinHSV(hsvImage);
-                mouse_released = false;
-            }
+            calculateHSV(frame);
         }
 
 		if(!color)
@@ -90,6 +77,23 @@ void Camera::read_camera()
 	running = false;
 }
 
+void Camera::calculateHSV(cv::Mat& frame)
+{
+            cv::Rect hsv_area= cv::Rect(point1, point2);
+            cv::rectangle(frame, hsv_area, cv::Scalar(0, 150, 20));
+
+            if(mouse_released && !contour_area_selection)
+            {
+                cv::Mat croppedFrame = frame(hsv_area);
+                cv::Mat hsvImage;
+                cv::cvtColor(croppedFrame, hsvImage, cv::COLOR_BGR2HSV);
+                cv::GaussianBlur(hsvImage, hsvImage, cv::Size(5, 5), 0);
+                cv::dilate(hsvImage, hsvImage, 0);
+                cv::erode(hsvImage, hsvImage, 0);
+                getMaxMinHSV(hsvImage);
+                mouse_released = false;
+            }
+}
 void Camera::detectFaces(cv::Mat& frame)
 {
     vector<cv::Rect> faces;
