@@ -26,7 +26,9 @@ Camera::Camera(QMutex *lock): data_lock(lock)
     mouse_released = false;
     contour_area_selection = false;
 
-	color = false;
+    color = false;
+
+    height = 0; width = 0;
 }
 
 void Camera::read_camera()
@@ -79,6 +81,7 @@ void Camera::calculateHSV(cv::Mat& frame)
                 cv::Mat croppedFrame = frame(hsv_area);
                 cv::Mat hsvImage;
                 cv::cvtColor(croppedFrame, hsvImage, cv::COLOR_BGR2HSV);
+                cv::GaussianBlur(hsvImage, hsvImage, cv::Size(5, 5), 0);
                 cv::GaussianBlur(hsvImage, hsvImage, cv::Size(5, 5), 0);
                 cv::dilate(hsvImage, hsvImage, 0);
                 cv::erode(hsvImage, hsvImage, 0);
@@ -168,6 +171,7 @@ void Camera::objectDetection(cv::Mat& frame, cv::Mat& processedFrame)
 
     cv::cvtColor(frame, hsvImage, cv::COLOR_BGR2HSV);
     cv::GaussianBlur(hsvImage, hsvImage, cv::Size(5, 5), 0);
+    cv::GaussianBlur(hsvImage, hsvImage, cv::Size(5, 5), 0);
     cv::inRange(hsvImage, cv::Scalar(lowH, lowS, lowV),
             cv::Scalar(highH, highS, highV), threshImage);
 
@@ -203,6 +207,8 @@ void Camera::drawContours(cv::Mat& frame, cv::Mat& bwframe)
     {
         roi = cv::Rect(point1, point2);
         contour_area_selection = false;
+        height = roi.height;
+        width = roi.width;
     }
 
     contour_frame = bwframe(roi);
@@ -210,7 +216,7 @@ void Camera::drawContours(cv::Mat& frame, cv::Mat& bwframe)
     vector<vector<cv::Point>> contours;
     vector<cv::Vec4i> heirarchy;
 
-    cv::findContours(contour_frame, contours, heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+    cv::findContours(contour_frame, contours, heirarchy, cv::RETR_TREE, cv::RETR_TREE);
     //RETR_EXTERNAL
     //RETR_TREE
     //CHAIN_APPROX_TC89_L1
@@ -220,37 +226,46 @@ void Camera::drawContours(cv::Mat& frame, cv::Mat& bwframe)
 
     for(size_t i=0; i < contours.size(); i++)
     {
-        cv::Scalar color = cv::Scalar(120, 0, 0);
+        cv::Scalar color = cv::Scalar(120, (i*30)%255, 0);
         if(this->color)
             cv::drawContours(frame(roi), contours, (int) i, color, 2, cv::LINE_8, heirarchy, 0);
         else
             cv::drawContours(bwframe(roi), contours, (int) i, color, 2, cv::LINE_8, heirarchy, 0);
     }
 
-    //TODO modify
-   // if(n < 100000)
-    //{
-    //    for(size_t i =0; i < contours.size();i++)
-    //    {
-    //        for(size_t j = 0; j <contours[i].size(); j++)
-    //        {
-    //            //qDebug() << contours[i][j].x << ", " <<contours[i][j].y;
-               // writeFile(contours[i][j]);
-
-    //        }
-    //    }
- //   }
- //   else
- //   {
- //       mFile.close();
- //       delete filename;
- //       filename = nullptr;
- //   }
+    calculateSignal(contours);
 }
 
-    //TODO modify this code to detect contours
-    //Let RTT select an area to detect the motion initially(simulation)
-    //The same area can be retraced
+void Camera::calculateSignal(vector<vector<cv::Point>> contours)
+{
+    for(size_t i = 0; i < contours.size(); i++)
+    {
+        int n = 0;
+        double sum = 0;
+        double average;
+        for(size_t j = 0; j < contours[i].size(); j++)
+        {
+        
+            cv::Point point = contours[i][j];
+            if(point.x < 5 || point.y < 5)
+            {}
+            else if((width - point.x) < 5 || (height - point.y) < 5)
+            {}
+            else
+            {
+                sum += point.y; 
+                n++;
+            }
+            if(n)
+            {
+                average = sum/n;
+                emit send_contourSignal(average);
+            }
+        }
+    }
+}
+
+    //TODO modify if any data needs to be written into a file 
 void Camera::writeFile(cv::Point point)
 {
     if(!filename)

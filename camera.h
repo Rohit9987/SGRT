@@ -38,6 +38,7 @@ public:
 signals:
 	void send_videoSignal(cv::Mat *);
     void send_maxMinHSV(int Hmin, int Hmax, int Smin, int Smax, int Vmin, int Vmax);
+    void send_contourSignal(double signal);
 
 public slots:
 
@@ -74,6 +75,9 @@ private:
 	bool color;
 
     void calculateHSV(cv::Mat& frame);
+
+    void calculateSignal(vector<vector<cv::Point>> contours);
+    int width, height;
 
 };
 #endif

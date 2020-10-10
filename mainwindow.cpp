@@ -3,7 +3,7 @@
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 {
-	setAttribute(Qt::WA_DeleteOnClose);
+	//setAttribute(Qt::WA_DeleteOnClose);
 	initUI();
 	createAction();
     data_lock = new QMutex();
@@ -13,8 +13,11 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 
 MainWindow::~MainWindow()
 {
+    if(camera)
+    {
     disconnect(camera, &Camera::send_videoSignal, this, &MainWindow::display_Video);
 	cameraThread->exit();
+    }
 }
 
 void MainWindow::initUI()
@@ -56,6 +59,10 @@ void MainWindow::initUI()
 	QLabel *output = new QLabel(this);
 	output->setText("OUTPUT:");
 	output_layout->addWidget(output, 0, 0, Qt::AlignTop | Qt::AlignLeft);
+    
+    signalLabel = new QLabel(this);
+    signalLabel->setText("Signal");
+    output_layout->addWidget(signalLabel, 1, 0, Qt::AlignTop | Qt::AlignLeft);
 
 	setCentralWidget(widget);
 }
@@ -129,6 +136,7 @@ void MainWindow::openCamera()
     connect(cameraThread, &QThread::finished, cameraThread, &QThread::deleteLater);
     connect(imageView, &GraphicsView::sendAreapoints, this, &MainWindow::receiveAreaPoints);
     connect(camera, &Camera::send_maxMinHSV, dibhWindow, &dibhControls::recthsvChanged);
+    connect(camera, &Camera::send_contourSignal, this, &MainWindow::contourSignal);
 
 	camera->moveToThread(cameraThread);
 	cameraThread->start();
@@ -176,4 +184,9 @@ void MainWindow::mouseReleased()
 void MainWindow::colorScheme(bool color)
 {
 	camera->colorScheme(color);
+}
+
+void MainWindow::contourSignal(double signal)
+{
+    signalLabel->setNum(signal);
 }

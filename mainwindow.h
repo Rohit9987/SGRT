@@ -58,6 +58,9 @@ private:
 	QThread *cameraThread;
     QMutex *data_lock;
 
+    //Lable for signal
+    QLabel *signalLabel;
+
 	/**
 	 *All layout designs
 	 */
@@ -82,5 +85,6 @@ public slots:
     void receiveAreaPoints(QPointF p1, QPointF p2);
     void receiveContourSlot();
 	void colorScheme(bool);
+    void contourSignal(double signal);
 };
 #endif	//MAINWINDOW
