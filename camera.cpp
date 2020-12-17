@@ -3,7 +3,11 @@
 #include <QDebug>
 #include <QApplication>
 
-Camera::Camera(QMutex *lock): data_lock(lock) 
+//TODO
+//the contours take up memory and slows down the process
+//use a smaller roi to set the region for contour detection
+
+Camera::Camera(QMutex *lock): data_lock(lock)
 {
 	camera = 0;
 //    lbpClassifier = new cv::CascadeClassifier(OPENCV_LBP_DIR "lbpcascade_frontalface.xml");
@@ -15,11 +19,16 @@ Camera::Camera(QMutex *lock): data_lock(lock)
     lowH = 50; lowS = 40; lowV = 70;
     highH = 255; highS = 255; highV = 255;
 
-    filename = nullptr; 
+    filename = nullptr;
     n = 0;
 
     draw_area_rect = false;
     mouse_released = false;
+    contour_area_selection = false;
+
+    color = false;
+
+    height = 0; width = 0;
 }
 
 void Camera::read_camera()
@@ -27,9 +36,17 @@ void Camera::read_camera()
 	running = true;
 	cv::VideoCapture cap(camera);
 	cv::Mat frame, frame_send;
-	
+
+    int width, height;
+    width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+    height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+    point1.x = 0;
+    point1.y = 0;
+    point2.x = width;
+    point2.y = height;
+    roi = cv::Rect(point1, point2);
 	//load face detection here
-	
+
 	while(running)
 	{
 		cap >> frame;
@@ -40,30 +57,38 @@ void Camera::read_camera()
 //        detectFaces(frame);
         if(draw_area_rect)
         {
-            cv::Rect hsv_area= cv::Rect(point1, point2);
-            cv::rectangle(frame, hsv_area, cv::Scalar(0, 150, 20));
-            //TODO put an if clause to crop only when the mouse is released. 
-            if(mouse_released)
-            {
-                cv::Mat croppedFrame = frame(hsv_area);
-                cv::Mat hsvImage;
-                cv::cvtColor(croppedFrame, hsvImage, cv::COLOR_BGR2HSV);
-                cv::GaussianBlur(hsvImage, hsvImage, cv::Size(3, 3), 0);
-                cv::dilate(hsvImage, hsvImage, 0);
-                cv::erode(hsvImage, hsvImage, 0);
-                getMaxMinHSV(hsvImage);
-                mouse_released = false;
-            }
+            calculateHSV(frame);
         }
-	    objectDetection(frame);
-        data_lock->lock();
-            frame_send = frame;
-        data_lock->unlock();
-		emit send_videoSignal(&frame_send);
+
+		data_lock->lock();
+			objectDetection(frame, frame_send);
+		data_lock->unlock();
+		
+        emit send_videoSignal(&frame_send);
     }
 
     cap.release();
 	running = false;
+}
+
+void Camera::calculateHSV(cv::Mat& frame)
+{
+            cv::Rect hsv_area= cv::Rect(point1, point2);
+            cv::rectangle(frame, hsv_area, cv::Scalar(0, 150, 20));
+
+            if(mouse_released && !contour_area_selection)
+            {
+                cv::Mat croppedFrame = frame(hsv_area);
+                cv::Mat hsvImage;
+                cv::cvtColor(croppedFrame, hsvImage, cv::COLOR_BGR2HSV);
+                cv::GaussianBlur(hsvImage, hsvImage, cv::Size(5, 5), 0);
+                cv::GaussianBlur(hsvImage, hsvImage, cv::Size(5, 5), 0);
+                cv::dilate(hsvImage, hsvImage, 0);
+                cv::erode(hsvImage, hsvImage, 0);
+                getMaxMinHSV(hsvImage);
+                mouse_released = false;
+                draw_area_rect= false;
+            }
 }
 
 void Camera::detectFaces(cv::Mat& frame)
@@ -72,10 +97,9 @@ void Camera::detectFaces(cv::Mat& frame)
     cv::Mat gray_frame;
     cv::cvtColor(frame, gray_frame, cv::COLOR_BGR2GRAY);
 
-
     lbpClassifier->detectMultiScale(gray_frame, faces, 1.3, 5);
     //haarClassifier->detectMultiScale(frame, faces, 1.3, 5);
-    
+
     cv::Scalar color = cv::Scalar(0, 0, 255);
     for(size_t i = 0; i<faces.size(); i++)
        cv::rectangle(frame, faces[i], color, 1);
@@ -140,22 +164,29 @@ void Camera::poseEstimation(cv::Mat& frame, vector<cv::Point2f>& shapes)
     cv::line(frame, image_points[0], nose_end_point2D[0], cv::Scalar(255, 0, 0), 2);
 }
 
-void Camera::objectDetection(cv::Mat& frame)
+void Camera::objectDetection(cv::Mat& frame, cv::Mat& processedFrame)
 {
-    cv::Mat hsvImage, threshImage;
+   	cv::Mat hsvImage, threshImage;
     //these number have to be input from the mainwindow options
 
     cv::cvtColor(frame, hsvImage, cv::COLOR_BGR2HSV);
+    cv::GaussianBlur(hsvImage, hsvImage, cv::Size(5, 5), 0);
+    cv::GaussianBlur(hsvImage, hsvImage, cv::Size(5, 5), 0);
     cv::inRange(hsvImage, cv::Scalar(lowH, lowS, lowV),
             cv::Scalar(highH, highS, highV), threshImage);
-    
+
     //blur, dilate and erode
-    cv::GaussianBlur(threshImage, threshImage, cv::Size(3, 3), 0);
+    cv::GaussianBlur(threshImage, threshImage, cv::Size(5, 5), 0);
     cv::dilate(threshImage, threshImage, 0);
     cv::erode(threshImage, threshImage, 0);
-    drawContours(threshImage);
+    drawContours(frame, threshImage);
+    if(color)
+    {
+        cvtColor(frame, processedFrame, cv::COLOR_BGR2RGB);
+        return;
+    }
     cv::cvtColor(threshImage, threshImage, cv::COLOR_GRAY2RGB);
-    frame = threshImage;
+    processedFrame = threshImage;
 }
 
 void Camera::hsvChanged(int lowHValue, int lowSValue, int lowVValue, int highHValue, int highSValue, int highVValue)
@@ -169,48 +200,77 @@ void Camera::hsvChanged(int lowHValue, int lowSValue, int lowVValue, int highHVa
 }
 
 // TODO Need to insert a cv::Rect
-void Camera::drawContours(cv::Mat& frame)
+void Camera::drawContours(cv::Mat& frame, cv::Mat& bwframe)
 {
+    cv::Mat contour_frame;
+    if(contour_area_selection)
+    {
+        roi = cv::Rect(point1, point2);
+        contour_area_selection = false;
+        height = roi.height;
+        width = roi.width;
+    }
+
+    contour_frame = bwframe(roi);
+
     vector<vector<cv::Point>> contours;
     vector<cv::Vec4i> heirarchy;
 
-    cv::findContours(frame, contours, heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
-    //cv::Mat drawing = cv::Mat::zeros( frame.size(), CV_8UC3);
+    cv::findContours(contour_frame, contours, heirarchy, cv::RETR_TREE, cv::RETR_TREE);
+    //RETR_EXTERNAL
+    //RETR_TREE
+    //CHAIN_APPROX_TC89_L1
+    //CHAIN_APPROX_TC89_KCOS
+    //CHAIN_APPROX_SIMPLE
+    //CHAIN_APPROX_NONE
 
     for(size_t i=0; i < contours.size(); i++)
     {
-        cv::Scalar color = cv::Scalar(120, 0, 0);
-        cv::drawContours(frame, contours, (int) i, color, 2, cv::LINE_8, heirarchy, 0);
+        cv::Scalar color = cv::Scalar(120, (i*30)%255, 0);
+        if(this->color)
+            cv::drawContours(frame(roi), contours, (int) i, color, 2, cv::LINE_8, heirarchy, 0);
+        else
+            cv::drawContours(bwframe(roi), contours, (int) i, color, 2, cv::LINE_8, heirarchy, 0);
     }
 
-    //TODO modify
-    if(n < 100)
-    {
-        for(size_t i =0; i < contours.size();i++)
-        {
-            for(size_t j = 0; j <contours[i].size(); j++)
-            {
-                writeFile(contours[i][j]);
+    calculateSignal(contours);
+}
 
+void Camera::calculateSignal(vector<vector<cv::Point>> contours)
+{
+    for(size_t i = 0; i < contours.size(); i++)
+    {
+        int n = 0;
+        double sum = 0;
+        double average;
+        for(size_t j = 0; j < contours[i].size(); j++)
+        {
+        
+            cv::Point point = contours[i][j];
+            if(point.x < 5 || point.y < 5)
+            {}
+            else if((width - point.x) < 5 || (height - point.y) < 5)
+            {}
+            else
+            {
+                sum += point.y; 
+                n++;
+            }
+            if(n)
+            {
+                average = sum/n;
+                emit send_contourSignal(average);
             }
         }
     }
-    else
-    {
-        mFile.close();
-        delete filename;
-        filename = nullptr;
-    }
 }
 
-    //TODO modify this code to detect contours
-    //Let RTT select an area to detect the motion initially(simulation)
-    //The same area can be retraced 
+    //TODO modify if any data needs to be written into a file 
 void Camera::writeFile(cv::Point point)
 {
     if(!filename)
         filename = new QString("/home/rohit/Desktop/SGRT/Surface guidance/outputfile");
-        
+
     if(!mFile.isOpen())
     {
         mFile.setFileName(*filename);
@@ -220,7 +280,7 @@ void Camera::writeFile(cv::Point point)
             return;
         }
     }
-    
+
     QTextStream mStream(&mFile);
     mStream << QString::number(point.x) <<" " << QString::number(point.y) <<"\n";
     mFile.flush();
@@ -239,6 +299,11 @@ void Camera::receiveAreaPoints(QPointF p1, QPointF p2)
 void Camera::mouseReleased()
 {
     mouse_released = true;
+}
+
+void Camera::contourAreaSelected()
+{
+    contour_area_selection = true;
 }
 
 void Camera::getMaxMinHSV(cv::Mat& croppedFrame)
@@ -262,7 +327,7 @@ void Camera::getMaxMinHSV(cv::Mat& croppedFrame)
                 V_ROI.push_back((int) croppedFrame.at<cv::Vec3b>(j,i)[2]);
             }
         }
-        
+
         Hmin = *std::min_element(H_ROI.begin(), H_ROI.end());
         Hmax = *std::max_element(H_ROI.begin(), H_ROI.end());
 
@@ -271,12 +336,12 @@ void Camera::getMaxMinHSV(cv::Mat& croppedFrame)
 
         Vmin = *std::min_element(V_ROI.begin(), V_ROI.end());
         Vmax = *std::max_element(V_ROI.begin(), V_ROI.end());
-   
-        qDebug() << "Hue: " <<Hmin <<", " << Hmax
-            << "Saturation: " <<Smin << ", " << Smax
-            << "Value: " << Vmin << ", " << Vmax;
 
         emit send_maxMinHSV(Hmin, Hmax, Smin, Smax, Vmin, Vmax);
     }
 }
- 
+
+void Camera::colorScheme(bool colorScheme)
+{
+	color = colorScheme;
+}
